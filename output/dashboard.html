@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lavra</title>
+<title>Bateia</title>
 <style>
   :root {
     color-scheme: light;
@@ -211,7 +211,7 @@
 <div class="topbar">
   <div class="topbar-inner">
     <div class="wordmark">
-      <span class="mark">LAVRA</span>
+      <span class="mark">BATEIA</span>
       <span class="tagline">Inteligência de dados da mineração brasileira</span>
     </div>
     <nav class="section-nav">
@@ -955,10 +955,10 @@ const DATA = {"bruta":{"ufs":["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA",
     function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* no-op */ } }
     var root = document.documentElement;
     var order = ["system", "light", "dark"];
-    var saved = safeGet("lavra-theme") || "system";
+    var saved = safeGet("bateia-theme") || "system";
     function applyTheme(t) {
       if (t === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
-      safeSet("lavra-theme", t);
+      safeSet("bateia-theme", t);
     }
     applyTheme(saved);
     byId("themeToggle").addEventListener("click", function () {

@@ -1,14 +1,34 @@
-# Lavra
+# Bateia
 
-Pipeline de dados e dashboard analítico sobre a mineração brasileira, a
-partir de duas bases públicas e reais da ANM (Agência Nacional de
-Mineração): **Produção Bruta** e **Produção Beneficiada**, ambas extraídas
-do Relatório Anual de Lavra (RAL), 2010–2025.
+Pipeline de dados de ponta a ponta (ETL em camadas + cruzamento SQL +
+dashboard) sobre a mineração brasileira — do dado bruto do governo ao
+insight executivo. O nome vem do instrumento usado para separar mineral
+valioso do sedimento: é o que o pipeline faz com dados declaratórios
+barulhentos.
 
 **[→ Ver o dashboard](output/dashboard.html)** (arquivo HTML único, sem
 dependências externas — abre offline, direto do disco).
 
 ![Visão geral do dashboard](docs/screenshots/bruta_dark.png)
+
+## Sobre o projeto
+
+Projeto de portfólio construído sobre **dados 100% reais e públicos**,
+publicados pela ANM (Agência Nacional de Mineração, órgão do governo
+federal brasileiro) a partir do Relatório Anual de Lavra (RAL) — nenhum
+dado sintético ou simulado. Duas bases, ~10.300 registros combinados,
+2010–2025: **Produção Bruta** (o que sai da lavra) e **Produção
+Beneficiada** (o que sai da usina, já processado).
+
+O projeto cobre o ciclo completo de um pipeline de dados: ingestão e
+limpeza de CSVs governamentais com inconsistências reais (formato decimal
+brasileiro, sentinelas de nulo, unidades de medida que variam por linha),
+agregação analítica, cruzamento entre duas fontes distintas via SQL, testes
+automatizados, CI, e um dashboard interativo publicado como artefato único.
+
+**Tecnologias:** Python · Polars · pandas · DuckDB (SQL) · PyArrow/Parquet ·
+pytest · GitHub Actions (CI) · Playwright · HTML/CSS/JavaScript vanilla
+(SVG, sem bibliotecas de gráfico).
 
 ## As bases
 

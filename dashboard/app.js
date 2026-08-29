@@ -537,10 +537,10 @@
     function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* no-op */ } }
     var root = document.documentElement;
     var order = ["system", "light", "dark"];
-    var saved = safeGet("lavra-theme") || "system";
+    var saved = safeGet("bateia-theme") || "system";
     function applyTheme(t) {
       if (t === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
-      safeSet("lavra-theme", t);
+      safeSet("bateia-theme", t);
     }
     applyTheme(saved);
     byId("themeToggle").addEventListener("click", function () {
