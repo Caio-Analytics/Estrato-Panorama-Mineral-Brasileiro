@@ -148,8 +148,21 @@ class TestGold:
 class TestCrossReference:
     @pytest.fixture(scope="class")
     def cruzamento(self, tmp_path_factory):
+        # Independent of the parametrized `spec`/`silver_df` fixtures above —
+        # this needs both datasets' Silver output at once, built fresh into
+        # their own temp dirs so the test never depends on data/silver/
+        # already existing on disk (e.g. a clean CI checkout).
+        bruta_dir = tmp_path_factory.mktemp("cruz_bruta")
+        ben_dir = tmp_path_factory.mktemp("cruz_ben")
+        bruta_spec = _patched(BRUTA, bruta_dir)
+        ben_spec = _patched(BENEFICIADA, ben_dir)
+        bronze.run_bronze(bruta_spec)
+        bronze.run_bronze(ben_spec)
+        silver.run_silver(bruta_spec)
+        silver.run_silver(ben_spec)
+
         out_dir = tmp_path_factory.mktemp("cruzamento")
-        return cross_reference.run_cross_reference(out_dir=out_dir)
+        return cross_reference.run_cross_reference(bruta=bruta_spec, beneficiada=ben_spec, out_dir=out_dir)
 
     def test_summary_counts_are_consistent(self, cruzamento):
         resumo = cruzamento["resumo.json"]

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import duckdb
 
-from etl.config import BENEFICIADA, BRUTA, GOLD_DIR
+from etl.config import BENEFICIADA, BRUTA, DatasetSpec, GOLD_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -40,24 +40,24 @@ def _write_json(obj, path: Path) -> None:
     logger.info("Cruzamento: wrote %s", path)
 
 
-def run_cross_reference(out_dir: Path = None) -> dict:
+def run_cross_reference(bruta: DatasetSpec = BRUTA, beneficiada: DatasetSpec = BENEFICIADA, out_dir: Path = None) -> dict:
     out_dir = out_dir or (GOLD_DIR / "cruzamento")
     con = duckdb.connect()
 
     con.execute(f"""
         CREATE OR REPLACE VIEW bruta_by_sub AS
-        SELECT "{BRUTA.col_substancia}" AS substancia,
-               SUM("{BRUTA.col_valor_venda}") AS valor_venda_bruta,
+        SELECT "{bruta.col_substancia}" AS substancia,
+               SUM("{bruta.col_valor_venda}") AS valor_venda_bruta,
                COUNT(*) AS n_bruta
-        FROM read_parquet('{BRUTA.silver_parquet.as_posix()}')
+        FROM read_parquet('{bruta.silver_parquet.as_posix()}')
         GROUP BY 1
     """)
     con.execute(f"""
         CREATE OR REPLACE VIEW ben_by_sub AS
-        SELECT "{BENEFICIADA.col_substancia}" AS substancia,
-               SUM("{BENEFICIADA.col_valor_venda}") AS valor_venda_beneficiada,
+        SELECT "{beneficiada.col_substancia}" AS substancia,
+               SUM("{beneficiada.col_valor_venda}") AS valor_venda_beneficiada,
                COUNT(*) AS n_beneficiada
-        FROM read_parquet('{BENEFICIADA.silver_parquet.as_posix()}')
+        FROM read_parquet('{beneficiada.silver_parquet.as_posix()}')
         GROUP BY 1
     """)
 
@@ -79,11 +79,11 @@ def run_cross_reference(out_dir: Path = None) -> dict:
 
     por_ano = con.execute(f"""
         WITH b AS (
-            SELECT "{BRUTA.col_ano}" AS ano, SUM("{BRUTA.col_valor_venda}") AS valor_venda_bruta
-            FROM read_parquet('{BRUTA.silver_parquet.as_posix()}') GROUP BY 1
+            SELECT "{bruta.col_ano}" AS ano, SUM("{bruta.col_valor_venda}") AS valor_venda_bruta
+            FROM read_parquet('{bruta.silver_parquet.as_posix()}') GROUP BY 1
         ), f AS (
-            SELECT "{BENEFICIADA.col_ano}" AS ano, SUM("{BENEFICIADA.col_valor_venda}") AS valor_venda_beneficiada
-            FROM read_parquet('{BENEFICIADA.silver_parquet.as_posix()}') GROUP BY 1
+            SELECT "{beneficiada.col_ano}" AS ano, SUM("{beneficiada.col_valor_venda}") AS valor_venda_beneficiada
+            FROM read_parquet('{beneficiada.silver_parquet.as_posix()}') GROUP BY 1
         )
         SELECT COALESCE(b.ano, f.ano) AS ano,
                COALESCE(b.valor_venda_bruta, 0) AS valor_venda_bruta,
