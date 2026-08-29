@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: stg_producao_bruta
+    description: >
+      Produção Bruta, typed and cleaned: Brazilian-decimal strings parsed to
+      DOUBLE via the parse_br_decimal macro, the "-" sentinel in Unidade de
+      Medida - Contido converted to a real NULL. One row per source CSV row
+      (Ano base x UF x Substância Mineral is not guaranteed unique in the
+      source).
+    columns:
+      - name: _row_id
+        description: Row-order id assigned at ingestion (etl/bronze.py).
+        data_tests:
+          - unique
+          - not_null
+      - name: ano_base
+        description: Reporting year, 2010-2025. Recon flagged this column as personal data (a false positive — see docs/relatorio_qualidade_producao_bruta.md).
+        data_tests:
+          - not_null
+      - name: uf
+        description: Brazilian state code.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('uf_regiao')
+                field: uf
+      - name: classe_substancia
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Metálicos", "Não-Metálicos", "Gemas e Diamantes", "Energéticos"]
+      - name: substancia_mineral
+        data_tests:
+          - not_null
+      - name: qtd_producao_rom_t
+        description: Run-of-mine ore quantity, tonnes. Recon flagged this as "mixed types" — false positive, see docs/relatorio_qualidade_producao_bruta.md.
+        data_tests:
+          - not_null
+      - name: valor_venda
+        description: Declared sale value, R$.
+        data_tests:
+          - not_null
+
+  - name: stg_producao_beneficiada
+    description: >
+      Produção Beneficiada, typed and cleaned. Same cleaning approach as
+      stg_producao_bruta, but every quantity keeps its own unit column
+      (t/kg/ct) since it is not uniform across rows.
+    columns:
+      - name: _row_id
+        data_tests:
+          - unique
+          - not_null
+      - name: ano_base
+        data_tests:
+          - not_null
+      - name: uf
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('uf_regiao')
+                field: uf
+      - name: classe_substancia
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Metálicos", "Não-Metálicos", "Gemas e Diamantes", "Energéticos"]
+      - name: valor_venda
+        data_tests:
+          - not_null

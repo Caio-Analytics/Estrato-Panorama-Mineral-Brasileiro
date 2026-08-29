@@ -1,0 +1,16 @@
+version: 2
+
+seeds:
+  - name: uf_regiao
+    description: IBGE region lookup for each Brazilian state (UF), used to derive Região across both fact tables.
+    columns:
+      - name: uf
+        data_tests:
+          - unique
+          - not_null
+      - name: regiao
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"]

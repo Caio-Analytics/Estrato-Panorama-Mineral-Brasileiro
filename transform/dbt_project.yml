@@ -1,0 +1,27 @@
+name: "bateia"
+version: "1.0.0"
+config-version: 2
+profile: "bateia"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # Below this many source records on either side, a value-add ratio in
+  # cruzamento_por_substancia_comparavel is too noisy to publish.
+  min_records_per_side: 5
+
+models:
+  bateia:
+    staging:
+      +materialized: view
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: marts

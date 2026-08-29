@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  pytest:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,11 +20,22 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run tests
-        run: python -m pytest tests/ -v
+      - name: Bronze (extract + load)
+        run: python -c "from etl import bronze; from etl.config import BRUTA, BENEFICIADA; bronze.run_bronze(BRUTA); bronze.run_bronze(BENEFICIADA)"
 
-      - name: Run full pipeline (smoke test)
-        run: python -m etl.pipeline
+      - name: dbt build (staging + marts + schema tests)
+        run: |
+          mkdir -p data/warehouse
+          dbt build --project-dir transform --profiles-dir transform
+        env:
+          BATEIA_DUCKDB_PATH: ${{ github.workspace }}/data/warehouse/bateia.duckdb
+          BATEIA_DATA_DIR: ${{ github.workspace }}/data
+
+      - name: Python tests (Bronze + dashboard build)
+        run: pytest tests/ -v
+
+      - name: Build dashboard
+        run: python -c "from dashboard.build_dashboard import build_dashboard; build_dashboard()"
 
       - name: Upload dashboard artifact
         uses: actions/upload-artifact@v4

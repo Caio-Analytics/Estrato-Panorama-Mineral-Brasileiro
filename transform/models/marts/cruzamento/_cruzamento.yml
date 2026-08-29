@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: cruzamento_por_substancia
+    description: >
+      Bruta x Beneficiada joined by substância mineral (full outer join —
+      a substance can appear in only one of the two source tables).
+      valor_agregado = valor_venda_beneficiada - valor_venda_bruta.
+    columns:
+      - name: substancia
+        data_tests: [unique, not_null]
+
+  - name: cruzamento_por_substancia_comparavel
+    description: cruzamento_por_substancia filtered to substances with at least min_records_per_side declarations on both sides — see the dbt var of the same name.
+    columns:
+      - name: substancia
+        data_tests: [unique, not_null]
+
+  - name: cruzamento_por_ano
+    description: National Bruta vs. Beneficiada value totals by year, independent of the per-substância comparability filter.
+    columns:
+      - name: ano
+        data_tests: [unique, not_null]
+
+  - name: cruzamento_resumo
+    description: Single-row summary of cruzamento coverage (substance counts on each side, in both, and comparable).

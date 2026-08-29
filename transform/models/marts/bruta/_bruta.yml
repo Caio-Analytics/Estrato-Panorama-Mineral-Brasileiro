@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: agg_bruta_serie_temporal
+    description: Yearly totals for Produção Bruta, with year-over-year growth via LAG().
+    columns:
+      - name: ano_base
+        data_tests: [unique, not_null]
+
+  - name: agg_bruta_by_uf
+    description: Produção Bruta totals by UF, with each state's share of national value.
+    columns:
+      - name: uf
+        data_tests: [unique, not_null]
+
+  - name: agg_bruta_by_substancia
+    description: Produção Bruta totals by substância mineral, with each substance's share of national value.
+    columns:
+      - name: substancia
+        data_tests: [unique, not_null]
+
+  - name: agg_bruta_by_classe
+    description: Produção Bruta totals by classe de substância.
+    columns:
+      - name: classe
+        data_tests: [unique, not_null]
+
+  - name: agg_bruta_destino_mix
+    description: Yearly destination mix (venda / transformação / transferência) by physical quantity — valid because Bruta's quantities are uniformly tonnes.
+    columns:
+      - name: ano_base
+        data_tests: [unique, not_null]

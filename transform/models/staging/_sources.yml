@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: >
+      Parquet written by the Python/Polars ingestion step (etl/bronze.py) —
+      cp1252 CSV decoded, typed as strings only, zero cleaning. dbt reads
+      these as external tables; nothing is copied into DuckDB.
+    meta:
+      external_location: "{{ env_var('BATEIA_DATA_DIR', '../data') }}/bronze/{name}.parquet"
+    tables:
+      - name: producao_bruta
+        description: Raw (pre-cleaning) Produção Bruta records, one row per source CSV row.
+      - name: producao_beneficiada
+        description: Raw (pre-cleaning) Produção Beneficiada records, one row per source CSV row.

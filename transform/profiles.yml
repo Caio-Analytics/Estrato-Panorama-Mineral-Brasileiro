@@ -1,0 +1,7 @@
+bateia:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('BATEIA_DUCKDB_PATH', '../data/warehouse/bateia.duckdb') }}"
+      threads: 4

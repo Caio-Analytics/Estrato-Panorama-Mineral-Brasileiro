@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: fct_producao_bruta
+    description: >
+      One row per Produção Bruta declaration, with Região and derived
+      value/quality columns. Grain: _row_id (source row order — the source
+      has no natural unique business key at ano_base x uf x substancia).
+    columns:
+      - name: _row_id
+        data_tests:
+          - unique
+          - not_null
+      - name: regiao
+        description: Derived from uf via the uf_regiao seed. NULL here would mean a UF the seed doesn't cover.
+        data_tests:
+          - not_null
+      - name: valor_total
+        data_tests:
+          - not_null
+
+  - name: fct_producao_beneficiada
+    description: One row per Produção Beneficiada declaration, with Região and derived value/quality columns.
+    columns:
+      - name: _row_id
+        data_tests:
+          - unique
+          - not_null
+      - name: regiao
+        data_tests:
+          - not_null
+      - name: valor_total
+        data_tests:
+          - not_null

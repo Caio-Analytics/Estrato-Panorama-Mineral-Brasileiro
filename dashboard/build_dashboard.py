@@ -1,19 +1,22 @@
-"""Assembles the single-file dashboard from the Silver + cross-reference layers.
+"""Assembles the single-file dashboard from dbt's mart tables.
 
-Builds a compact row-level payload per dataset (categorical columns
-dictionary-encoded to integer indices) plus the pre-aggregated Bruta x
-Beneficiada cross-reference, and injects all three, plus the vanilla-JS app,
-into template.html. The output is one self-contained HTML file — no CDN, no
-build step, opens straight from disk.
+Reads directly from the DuckDB warehouse dbt builds (transform/models/marts)
+— no intermediate Parquet/JSON hand-off. Builds a compact row-level payload
+per dataset (categorical columns dictionary-encoded to integer indices,
+Polars used as the shaping layer over the query result) plus the
+pre-aggregated Bruta x Beneficiada cross-reference, and injects all three,
+plus the vanilla-JS app, into template.html. The output is one
+self-contained HTML file — no CDN, no build step, opens straight from disk.
 """
 
 import json
 import logging
 from pathlib import Path
 
+import duckdb
 import polars as pl
 
-from etl.config import BENEFICIADA, BRUTA, DASHBOARD_HTML, DatasetSpec, GOLD_DIR
+from etl.config import DASHBOARD_HTML, DUCKDB_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -22,73 +25,63 @@ TEMPLATE_PATH = DASHBOARD_DIR / "template.html"
 APP_JS_PATH = DASHBOARD_DIR / "app.js"
 
 
-def build_dataset_payload(spec: DatasetSpec) -> dict:
-    df = pl.read_parquet(spec.silver_parquet)
+def build_dataset_payload(con: duckdb.DuckDBPyConnection, table: str, uniform_unit: bool) -> dict:
+    df = con.execute(f"select * from main_marts.{table}").pl()
 
-    ufs = sorted(df.select(pl.col(spec.col_uf).cast(pl.Utf8)).unique().to_series().drop_nulls().to_list())
-    classes = sorted(df.select(pl.col(spec.col_classe).cast(pl.Utf8)).unique().to_series().drop_nulls().to_list())
-    substancias = sorted(df.select(pl.col(spec.col_substancia).cast(pl.Utf8)).unique().to_series().drop_nulls().to_list())
+    ufs = sorted(df["uf"].unique().drop_nulls().to_list())
+    classes = sorted(df["classe_substancia"].unique().drop_nulls().to_list())
+    substancias = sorted(df["substancia_mineral"].unique().drop_nulls().to_list())
 
     uf_idx = {u: i for i, u in enumerate(ufs)}
     cl_idx = {c: i for i, c in enumerate(classes)}
     sb_idx = {s: i for i, s in enumerate(substancias)}
 
-    from etl.config import UF_REGIAO
+    regiao_by_uf = dict(df.select(["uf", "regiao"]).unique().sort("uf").iter_rows())
 
     select_exprs = [
-        pl.col(spec.col_ano),
-        pl.col(spec.col_uf).cast(pl.Utf8).replace_strict(uf_idx).alias("uf_i"),
-        pl.col(spec.col_classe).cast(pl.Utf8).replace_strict(cl_idx).alias("cl_i"),
-        pl.col(spec.col_substancia).cast(pl.Utf8).replace_strict(sb_idx).alias("sb_i"),
+        pl.col("ano_base"),
+        pl.col("uf").replace_strict(uf_idx).alias("uf_i"),
+        pl.col("classe_substancia").replace_strict(cl_idx).alias("cl_i"),
+        pl.col("substancia_mineral").replace_strict(sb_idx).alias("sb_i"),
     ]
-    if spec.quantities_uniform_unit:
-        select_exprs.append(pl.col(spec.col_qtd_producao).round(1))
-        select_exprs.append(pl.col(spec.col_qtd_venda).round(1))
-    select_exprs.append(pl.col(spec.col_valor_venda).round(2))
-    if spec.quantities_uniform_unit:
-        select_exprs.append(pl.col(spec.col_qtd_transformacao).round(1))
-    select_exprs.append(pl.col(spec.col_valor_transformacao).round(2))
-    if spec.quantities_uniform_unit:
-        select_exprs.append(pl.col(spec.col_qtd_transferencia).round(1))
-    select_exprs.append(pl.col(spec.col_valor_transferencia).round(2))
+    if uniform_unit:
+        select_exprs += [pl.col("qtd_producao_rom_t").round(1), pl.col("qtd_venda_t").round(1)]
+    select_exprs.append(pl.col("valor_venda").round(2))
+    if uniform_unit:
+        select_exprs.append(pl.col("qtd_transformacao_t").round(1))
+    select_exprs.append(pl.col("valor_transformacao").round(2))
+    if uniform_unit:
+        select_exprs.append(pl.col("qtd_transferencia_t").round(1))
+    select_exprs.append(pl.col("valor_transferencia").round(2))
 
     rows = df.select(select_exprs).rows()
-
-    regioes_presentes = sorted({UF_REGIAO[u] for u in ufs})
+    regioes_presentes = sorted(set(regiao_by_uf.values()))
 
     return {
         "ufs": ufs,
         "classes": classes,
         "substancias": substancias,
-        "regiaoByUf": {u: UF_REGIAO[u] for u in ufs},
+        "regiaoByUf": regiao_by_uf,
         "regioesSet": {r: True for r in regioes_presentes},
-        "anoMin": int(df[spec.col_ano].min()),
-        "anoMax": int(df[spec.col_ano].max()),
+        "anoMin": int(df["ano_base"].min()),
+        "anoMax": int(df["ano_base"].max()),
         "rows": rows,
     }
 
 
-def build_cruzamento_payload(gold_dir: Path = GOLD_DIR) -> dict:
-    cruz_dir = gold_dir / "cruzamento"
-    with open(cruz_dir / "por_substancia_comparavel.json", encoding="utf-8") as f:
-        por_sub = json.load(f)
-    with open(cruz_dir / "por_ano.json", encoding="utf-8") as f:
-        por_ano = json.load(f)
-    with open(cruz_dir / "resumo.json", encoding="utf-8") as f:
-        resumo = json.load(f)
+def build_cruzamento_payload(con: duckdb.DuckDBPyConnection) -> dict:
+    por_sub = con.execute("select * from main_marts.cruzamento_por_substancia_comparavel").pl()
+    por_ano = con.execute("select * from main_marts.cruzamento_por_ano").pl()
+    resumo = con.execute("select * from main_marts.cruzamento_resumo").pl().row(0, named=True)
 
     return {
         "porSubstanciaComparavel": [
-            {
-                "substancia": r["substancia"],
-                "valorAgregado": r["valor_agregado"],
-                "fatorAgregacao": r["fator_agregacao"],
-            }
-            for r in por_sub
+            {"substancia": r["substancia"], "valorAgregado": r["valor_agregado"], "fatorAgregacao": r["fator_agregacao"]}
+            for r in por_sub.iter_rows(named=True)
         ],
         "porAno": [
             {"ano": r["ano"], "valorVendaBruta": r["valor_venda_bruta"], "valorVendaBeneficiada": r["valor_venda_beneficiada"]}
-            for r in por_ano
+            for r in por_ano.iter_rows(named=True)
         ],
         "resumo": {
             "nSubstanciasAmbas": resumo["n_substancias_ambas"],
@@ -97,12 +90,17 @@ def build_cruzamento_payload(gold_dir: Path = GOLD_DIR) -> dict:
     }
 
 
-def build_dashboard(out_path: Path = DASHBOARD_HTML) -> Path:
-    payload = {
-        "bruta": build_dataset_payload(BRUTA),
-        "beneficiada": build_dataset_payload(BENEFICIADA),
-        "cruzamento": build_cruzamento_payload(),
-    }
+def build_dashboard(out_path: Path = DASHBOARD_HTML, duckdb_path: Path = DUCKDB_PATH) -> Path:
+    con = duckdb.connect(str(duckdb_path), read_only=True)
+    try:
+        payload = {
+            "bruta": build_dataset_payload(con, "fct_producao_bruta", uniform_unit=True),
+            "beneficiada": build_dataset_payload(con, "fct_producao_beneficiada", uniform_unit=False),
+            "cruzamento": build_cruzamento_payload(con),
+        }
+    finally:
+        con.close()
+
     data_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     # Defensive: a "</script>" substring anywhere in the data (or in the app
     # JS) would prematurely close the inline <script> tag and break parsing.

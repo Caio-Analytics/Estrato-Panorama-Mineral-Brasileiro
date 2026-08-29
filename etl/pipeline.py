@@ -1,22 +1,24 @@
-"""Orchestrates the full pipeline: Bronze -> Silver -> Gold -> Cross-reference
--> Dashboard, for both datasets (Produção Bruta and Produção Beneficiada).
+"""Orchestrates the full pipeline: Bronze (Python/Polars) -> dbt build
+(staging + marts + tests, DuckDB) -> Dashboard.
 
     python -m etl.pipeline
 
-Each stage is timed and logged independently so the console output doubles
-as a lightweight performance report (this is also why Bronze/Silver run on
-Polars: ingesting + cleaning ~10k combined rows across two 14-20 column CSVs
-is dominated by string parsing, exactly where Polars' Rust-native,
-multi-threaded expression engine pulls ahead of row-wise Python).
+Bronze is Python because dbt isn't an extraction tool — it assumes data is
+already queryable, and these are cp1252-encoded CSVs DuckDB can't decode
+natively. Everything past "typed, UTF-8, columnar" is dbt: cleaning,
+region lookups, aggregation, and the cross-dataset join are all SQL models
+under transform/, tested and documented via `dbt build`.
 """
 
 import logging
+import os
+import subprocess
 import time
 from contextlib import contextmanager
 
 from dashboard import build_dashboard
-from etl import bronze, cross_reference, gold, silver
-from etl.config import BENEFICIADA, BRUTA
+from etl import bronze
+from etl.config import BENEFICIADA, BRUTA, DATA_DIR, DUCKDB_PATH, PROJECT_ROOT, TRANSFORM_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("pipeline")
@@ -30,23 +32,24 @@ def timed(stage: str):
     logger.info("=== %s: done in %.2fs ===", stage, time.perf_counter() - t0)
 
 
+def run_dbt_build() -> None:
+    cmd = ["dbt", "build", "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR)]
+    logger.info("Running: %s", " ".join(cmd))
+    # profiles.yml / sources.yml default to paths relative to transform/ (so
+    # `dbt build` run by hand from that directory just works) — override
+    # with absolute paths here since this subprocess's cwd is the repo root.
+    DUCKDB_PATH.parent.mkdir(parents=True, exist_ok=True)  # DuckDB won't create it itself
+    env = {**os.environ, "BATEIA_DUCKDB_PATH": str(DUCKDB_PATH), "BATEIA_DATA_DIR": str(DATA_DIR)}
+    subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, env=env)
+
+
 def main() -> None:
-    specs = [BRUTA, BENEFICIADA]
-
     with timed("Bronze"):
-        for spec in specs:
-            bronze.run_bronze(spec)
+        bronze.run_bronze(BRUTA)
+        bronze.run_bronze(BENEFICIADA)
 
-    with timed("Silver"):
-        for spec in specs:
-            silver.run_silver(spec)
-
-    with timed("Gold"):
-        for spec in specs:
-            gold.run_gold(spec)
-
-    with timed("Cruzamento"):
-        cross_reference.run_cross_reference()
+    with timed("dbt build"):
+        run_dbt_build()
 
     with timed("Dashboard"):
         out = build_dashboard.build_dashboard()

@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: agg_beneficiada_serie_temporal
+    description: Yearly totals for Produção Beneficiada, with year-over-year growth via LAG().
+    columns:
+      - name: ano_base
+        data_tests: [unique, not_null]
+
+  - name: agg_beneficiada_by_uf
+    description: Produção Beneficiada totals by UF, with each state's share of national value.
+    columns:
+      - name: uf
+        data_tests: [unique, not_null]
+
+  - name: agg_beneficiada_by_substancia
+    description: Produção Beneficiada totals by substância mineral, with each substance's share of national value.
+    columns:
+      - name: substancia
+        data_tests: [unique, not_null]
+
+  - name: agg_beneficiada_by_classe
+    description: Produção Beneficiada totals by classe de substância.
+    columns:
+      - name: classe
+        data_tests: [unique, not_null]
+
+  - name: agg_beneficiada_destino_mix
+    description: Yearly destination mix (venda / transformação / transferência) by VALUE — Beneficiada's quantities aren't in a uniform unit, so value is the only safe common denominator.
+    columns:
+      - name: ano_base
+        data_tests: [unique, not_null]
