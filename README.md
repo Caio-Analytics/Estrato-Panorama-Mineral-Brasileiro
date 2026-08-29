@@ -167,9 +167,11 @@ de práticas que dá nome ao cargo de Analytics Engineer:
 
 A base de Produção Bruta veio acompanhada de um perfilamento automático
 (`recon`). Duas das sinalizações "críticas" eram falsos positivos (uma
-coluna de ano confundida com dado pessoal; oito colunas numéricas
+coluna de ano confundida com dado pessoal; seis colunas numéricas
 sinalizadas como "mistura de tipos" que na verdade são decimal brasileiro
-consistente) — a extração completa do que o profiler sinalizou está em
+consistente — mais uma, "Quantidade Venda (t)", sinalizada por
+"grafias divergentes" que também não se sustenta: '145' e '14,5' são
+dois números diferentes, não o mesmo valor escrito de duas formas) — a extração completa do que o profiler sinalizou está em
 [`docs/relatorio_qualidade_producao_bruta.md`](docs/relatorio_qualidade_producao_bruta.md)
 (gerado por [`etl/quality_report.py`](etl/quality_report.py), reutilizável
 para qualquer `recon_<Tabela>.json` no mesmo formato).
