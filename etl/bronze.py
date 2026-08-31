@@ -1,9 +1,4 @@
-"""Bronze layer: ingest a raw ANM CSV with zero interpretation.
-
-Generic over `DatasetSpec` — Produção Bruta and Produção Beneficiada share
-this exact ingestion logic (read as string, tag with lineage metadata, write
-parquet); only their column names differ, and that lives in config.py.
-"""
+"""Bronze layer: ingest a raw ANM CSV with zero interpretation."""
 
 import logging
 

@@ -1,6 +1,4 @@
--- Destination mix by VALUE (R$), not quantity — Beneficiada's quantities
--- aren't in a uniform unit (t/kg/ct vary by row), so summing them would be
--- invalid. Value is unit-agnostic and is the only safe common denominator.
+-- by value, not quantity — units vary by row here (t/kg/ct)
 
 with base as (
     select

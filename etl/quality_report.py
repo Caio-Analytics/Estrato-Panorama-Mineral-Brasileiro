@@ -1,13 +1,5 @@
 """Turns a recon profiler JSON into a standalone Markdown findings report.
 
-Generic over any recon file matching the `recon_<Tabela>.json` shape (score,
-colunas_criticas, recomendacoes_etl) — not specific to Produção Bruta, so the
-same command works once a recon is produced for Produção Beneficiada or any
-future table. This file is deliberately separate from the pipeline's own
-data-quality logic in silver.py: it's a faithful extraction of what the
-profiler flagged, for follow-up work — not a record of what the pipeline
-already resolved.
-
     python -m etl.quality_report data/recon/recon_Producao_Bruta.json
 """
 

@@ -1,9 +1,4 @@
--- Typed, cleaned, snake_case Produção Beneficiada. Unlike Bruta, each
--- quantity here carries its OWN unit (t / kg / ct, varying row to row —
--- a diamond in carats next to bauxite in tonnes), so the unit columns are
--- kept alongside every quantity and nothing downstream sums raw quantities
--- across rows. Only the R$ columns (unit-agnostic) are safe to aggregate —
--- see marts/beneficiada/*.sql.
+-- each quantity keeps its own unit column (t/kg/ct varies by row)
 
 with source as (
     select * from {{ source('bronze', 'producao_beneficiada') }}

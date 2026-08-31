@@ -1,7 +1,4 @@
--- Silver-equivalent fact table for Produção Beneficiada. No
--- qtd_total_destinada / flag_destinacao_excede_producao here — those
--- would sum quantities across mixed units (t/kg/ct), which is invalid.
--- Value (R$) is unit-agnostic, so it's the only total computed.
+-- no qtd_total_destinada here — units aren't uniform, so only value totals
 
 with stg as (
     select * from {{ ref('stg_producao_beneficiada') }}

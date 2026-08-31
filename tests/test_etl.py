@@ -1,8 +1,5 @@
-"""Tests for the Python side of the pipeline: Bronze (extract+load) and the
-dashboard build. The transform layer (cleaning, aggregation, the Bruta x
-Beneficiada cross-reference) is dbt's job now, and its own test suite —
-schema tests, the singular test, `dbt build` itself — is what validates it;
-see transform/. Run both suites in CI (see .github/workflows/tests.yml):
+"""Tests for the Python side of the pipeline: Bronze and the dashboard
+build. The transform layer is covered by dbt's own test suite (transform/).
 
     dbt build --project-dir transform --profiles-dir transform
     pytest tests/
@@ -55,8 +52,7 @@ class TestBronze:
 
 
 class TestDashboardBuild:
-    """Integration smoke test over the real dbt-built warehouse — requires
-    `dbt build` to have already run (see module docstring)."""
+    """Requires `dbt build` to have already run."""
 
     @pytest.fixture(scope="class")
     def payload(self):

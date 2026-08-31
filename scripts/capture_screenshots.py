@@ -1,14 +1,9 @@
-"""Captures portfolio screenshots of the dashboard and the dbt docs site
-via Playwright.
+"""Captures portfolio screenshots of the dashboard and the dbt docs site.
 
-Not part of the data pipeline — a dev utility to regenerate
-docs/screenshots/ after a redesign. Requires the dashboard to already be
-built (`python -m etl.pipeline`) and the dbt docs already generated
-(`dbt docs generate --static --project-dir transform --profiles-dir
-transform`, then copy transform/target/static_index.html to
-docs/dbt/index.html). Both are served over HTTP rather than opened as raw
-`file://` URLs — headless Chromium's page-load handling is more predictable
-that way, and the dbt docs app's own routing expects it.
+Requires the dashboard already built (`python -m etl.pipeline`) and the dbt
+docs already generated (`dbt docs generate --static --project-dir transform
+--profiles-dir transform`, then copy transform/target/static_index.html to
+docs/dbt/index.html).
 
     pip install playwright && python -m playwright install chromium
     python scripts/capture_screenshots.py

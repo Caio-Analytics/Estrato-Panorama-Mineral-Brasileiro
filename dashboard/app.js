@@ -1,11 +1,4 @@
-/* Dashboard client — zero external dependencies.
- * Three sections share one set of chart builders (line, horizontal bar,
- * 100%-stacked column, diverging bar): Produção Bruta and Produção
- * Beneficiada each get an interactive filtered view over their own embedded
- * rows; Beneficiamento renders the pre-aggregated Bruta×Beneficiada
- * cross-reference (computed server-side via DuckDB — see
- * etl/cross_reference.py) as a static executive summary.
- */
+/* Dashboard client — zero external dependencies. */
 (function () {
   "use strict";
 

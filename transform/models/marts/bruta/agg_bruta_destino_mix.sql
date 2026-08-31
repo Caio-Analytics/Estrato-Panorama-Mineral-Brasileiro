@@ -1,7 +1,3 @@
--- Destination mix by physical quantity (tonnes) — valid here because
--- Bruta's quantities are uniformly tonnes. Contrast with Beneficiada's
--- version, which mixes by value instead.
-
 with base as (
     select
         ano_base,

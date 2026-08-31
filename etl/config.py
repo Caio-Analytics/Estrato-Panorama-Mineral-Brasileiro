@@ -1,12 +1,5 @@
-"""Paths and dataset specs for the Extract+Load boundary.
-
-Everything past "read the CSV and get it into a queryable columnar format"
-now lives in dbt (see transform/) — cleaning, typing, region lookups,
-aggregation, and the Bruta x Beneficiada cross-reference are all dbt models
-under transform/models/. This file only needs to know what Bronze (Python
-+ Polars) needs to know: where the raw CSVs are, what columns they must
-have, and where to write the Parquet dbt reads as an external source.
-"""
+"""Paths and dataset specs for the Extract+Load boundary. Cleaning,
+typing, and aggregation live in dbt (see transform/)."""
 
 from dataclasses import dataclass, field
 from pathlib import Path

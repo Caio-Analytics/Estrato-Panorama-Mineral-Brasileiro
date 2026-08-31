@@ -1,8 +1,3 @@
--- Silver-equivalent fact table: stg_producao_bruta + Região + derived
--- value/quality columns. Quantities are uniformly tonnes here, so a
--- physical-quantity total (qtd_total_destinada) is meaningful — contrast
--- with fct_producao_beneficiada, which has no such column.
-
 with stg as (
     select * from {{ ref('stg_producao_bruta') }}
 ),

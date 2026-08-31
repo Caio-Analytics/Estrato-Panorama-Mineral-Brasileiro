@@ -1,9 +1,5 @@
--- Bruta x Beneficiada joined by substância — the headline cross-dataset
--- analysis. Aggregated first, then FULL OUTER JOINed on substância rather
--- than joined at row grain: raw and processed output for the same
--- substance don't necessarily come from the same mine in the same year, so
--- a row-grain join would silently drop real volume. Value (R$), never
--- quantity — Beneficiada's units aren't comparable to Bruta's tonnes.
+-- aggregated per side first, then joined on substância — row-grain join
+-- would drop volume where raw/processed come from different mines/years
 
 with bruta as (
     select substancia_mineral as substancia, sum(valor_venda) as valor_venda_bruta, count(*) as n_bruta

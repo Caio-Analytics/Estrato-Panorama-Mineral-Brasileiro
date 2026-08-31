@@ -1,13 +1,6 @@
-"""Orchestrates the full pipeline: Bronze (Python/Polars) -> dbt build
-(staging + marts + tests, DuckDB) -> Dashboard.
+"""Orchestrates the full pipeline: Bronze -> dbt build -> Dashboard.
 
     python -m etl.pipeline
-
-Bronze is Python because dbt isn't an extraction tool — it assumes data is
-already queryable, and these are cp1252-encoded CSVs DuckDB can't decode
-natively. Everything past "typed, UTF-8, columnar" is dbt: cleaning,
-region lookups, aggregation, and the cross-dataset join are all SQL models
-under transform/, tested and documented via `dbt build`.
 """
 
 import logging
@@ -35,10 +28,9 @@ def timed(stage: str):
 def run_dbt_build() -> None:
     cmd = ["dbt", "build", "--project-dir", str(TRANSFORM_DIR), "--profiles-dir", str(TRANSFORM_DIR)]
     logger.info("Running: %s", " ".join(cmd))
-    # profiles.yml / sources.yml default to paths relative to transform/ (so
-    # `dbt build` run by hand from that directory just works) — override
-    # with absolute paths here since this subprocess's cwd is the repo root.
-    DUCKDB_PATH.parent.mkdir(parents=True, exist_ok=True)  # DuckDB won't create it itself
+    # profiles.yml paths are relative to transform/; override with absolute
+    # paths since this subprocess's cwd is the repo root.
+    DUCKDB_PATH.parent.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "BATEIA_DUCKDB_PATH": str(DUCKDB_PATH), "BATEIA_DATA_DIR": str(DATA_DIR)}
     subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, env=env)
 

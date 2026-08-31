@@ -1,13 +1,4 @@
-"""Assembles the single-file dashboard from dbt's mart tables.
-
-Reads directly from the DuckDB warehouse dbt builds (transform/models/marts)
-— no intermediate Parquet/JSON hand-off. Builds a compact row-level payload
-per dataset (categorical columns dictionary-encoded to integer indices,
-Polars used as the shaping layer over the query result) plus the
-pre-aggregated Bruta x Beneficiada cross-reference, and injects all three,
-plus the vanilla-JS app, into template.html. The output is one
-self-contained HTML file — no CDN, no build step, opens straight from disk.
-"""
+"""Assembles the single-file dashboard from dbt's mart tables."""
 
 import json
 import logging
@@ -102,8 +93,7 @@ def build_dashboard(out_path: Path = DASHBOARD_HTML, duckdb_path: Path = DUCKDB_
         con.close()
 
     data_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    # Defensive: a "</script>" substring anywhere in the data (or in the app
-    # JS) would prematurely close the inline <script> tag and break parsing.
+    # avoid a stray "</script" in the data closing the inline <script> tag early
     data_json = data_json.replace("</script", "<\\/script")
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")

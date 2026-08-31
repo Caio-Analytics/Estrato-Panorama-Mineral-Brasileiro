@@ -13,8 +13,6 @@ clean-targets:
   - "dbt_packages"
 
 vars:
-  # Below this many source records on either side, a value-add ratio in
-  # cruzamento_por_substancia_comparavel is too noisy to publish.
   min_records_per_side: 5
 
 models:

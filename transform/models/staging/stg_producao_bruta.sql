@@ -1,8 +1,5 @@
--- Typed, cleaned, snake_case Produção Bruta — the dbt-native replacement
--- for etl/silver.py's Bruta branch. Every quantity here is in tonnes
--- (baked into the source column names), so summing them downstream is
--- numerically meaningful — see stg_producao_beneficiada.sql for the
--- dataset where that is NOT true.
+-- quantities here are all tonnes (see stg_producao_beneficiada for the
+-- dataset where that isn't true)
 
 with source as (
     select * from {{ source('bronze', 'producao_bruta') }}

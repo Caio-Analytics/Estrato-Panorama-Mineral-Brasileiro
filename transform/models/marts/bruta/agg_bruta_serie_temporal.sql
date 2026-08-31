@@ -1,6 +1,3 @@
--- Yearly roll-up with window-function YoY growth — the SQL equivalent of
--- the old pandas .pct_change() in etl/gold.py.
-
 with base as (
     select
         ano_base,
