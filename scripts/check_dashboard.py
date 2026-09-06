@@ -14,7 +14,7 @@ def main():
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto((ROOT / 'output/dashboard.html').as_uri())
-        expect(page).to_have_title('Estrato · Observatório da Mineração')
+        expect(page).to_have_title('Estrato Panorama Mineral Brasileiro')
         expect(page.locator('#bruta-results')).to_contain_text('6.313 registros')
         expect(page.locator('#beneficiada')).to_be_hidden()
         # Search accents, empty results, reset and keyboard-operated chips.

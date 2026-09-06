@@ -90,7 +90,7 @@ class TestDashboardBuild:
         out = build_dashboard(out_path=tmp_path / "dashboard.html")
         html = out.read_text(encoding="utf-8")
 
-        assert "<title>Estrato · Observatório da Mineração</title>" in html
+        assert "<title>Estrato Panorama Mineral Brasileiro</title>" in html
         assert "__DATA_JSON__" not in html  # placeholder must be substituted
         assert "__APP_JS__" not in html
 

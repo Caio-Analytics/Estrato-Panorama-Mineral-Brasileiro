@@ -1,13 +1,13 @@
-# Estrato · Observatório da Mineração
+# Estrato Panorama Mineral Brasileiro
 
 **Uma nova camada de leitura dos dados.** Um case de engenharia e análise
 exploratória da mineração brasileira: do CSV público ao dashboard.
 Estrato conecta as camadas geológicas às camadas de transformação dos dados.
-O projeto se chamava Bateia e agora se chama Estrato.
+O projeto se chamava Bateia e agora se chama Estrato Panorama Mineral Brasileiro.
 
-**[Abrir dashboard online](https://caio-analytics.github.io/Estrato/)** ·
+**[Abrir dashboard online](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/)** ·
 [Versão offline](output/dashboard.html) ·
-[Documentação e linhagem dbt](https://caio-analytics.github.io/Estrato/dbt/) ·
+[Documentação e linhagem dbt](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/dbt/) ·
 [Decisões de design](docs/design.md)
 
 ![Dashboard Estrato](docs/screenshots/bruta_light.png)
