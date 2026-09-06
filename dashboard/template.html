@@ -3,70 +3,28 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bateia</title>
+<title>Estrato · Observatório da Mineração</title>
+<meta name="description" content="Explore a mineração brasileira em dados públicos da ANM. Um case de engenharia de dados e análise, da ingestão ao dashboard." />
 <style>
   :root {
     color-scheme: light;
-    --surface-1:      #fcfcfb;
-    --surface-2:      #f3f2ee;
-    --page-plane:      #f9f9f7;
-    --text-primary:   #0b0b0b;
-    --text-secondary: #52514e;
-    --text-muted:     #898781;
-    --gridline:       #e1e0d9;
-    --baseline:       #c3c2b7;
-    --border:         rgba(11,11,11,0.10);
-    --success-text:   #006300;
-
-    --series-1: #2a78d6; /* blue */
-    --series-2: #eb6834; /* orange */
-    --series-3: #1baf7a; /* aqua */
-    --series-4: #eda100; /* yellow */
-    --series-5: #e87ba4; /* magenta */
-    --series-6: #008300; /* green */
-    --series-7: #4a3aa7; /* violet */
-    --series-8: #e34948; /* red */
-    --diverge-neg: #d03b3b;
-
-    --status-good: #0ca30c;
-    --status-warning: #fab219;
-    --status-critical: #d03b3b;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:where(:not([data-theme="light"])) {
-      color-scheme: dark;
-      --surface-1: #1a1a19;
-      --surface-2: #222221;
-      --page-plane: #0d0d0d;
-      --text-primary: #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted: #898781;
-      --gridline: #2c2c2a;
-      --baseline: #383835;
-      --border: rgba(255,255,255,0.10);
-      --success-text: #0ca30c;
-      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
-      --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
-      --series-7: #9085e9; --series-8: #e66767;
-      --diverge-neg: #e66767;
-    }
+    --surface-1: #ffffff; --surface-2: #edf2f1; --page-plane: #f4f6f5;
+    --text-primary: #172d2b; --text-secondary: #435e5b; --text-muted: #5b706d;
+    --gridline: #e1e9e6; --baseline: #a0b5ae; --border: #d8e2de;
+    --success-text: #176849; --series-1: #187965; --series-2: #a45b20;
+    --series-3: #416ca6; --series-4: #866719; --series-5: #9d5277;
+    --series-6: #4f723d; --series-7: #7062a8; --series-8: #b34b4b;
+    --diverge-neg: #b34b4b; --accent: #187965; --on-accent: #fff;
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface-1: #1a1a19;
-    --surface-2: #222221;
-    --page-plane: #0d0d0d;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --gridline: #2c2c2a;
-    --baseline: #383835;
-    --border: rgba(255,255,255,0.10);
-    --success-text: #0ca30c;
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
-    --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
-    --series-7: #9085e9; --series-8: #e66767;
-    --diverge-neg: #e66767;
+    --surface-1: #142522; --surface-2: #1c302c; --page-plane: #0c1917;
+    --text-primary: #eef5ef; --text-secondary: #bdcfc6; --text-muted: #9bb4aa;
+    --gridline: #2a4039; --baseline: #536d62; --border: #2a4039;
+    --success-text: #8ad6b3; --series-1: #70c7a9; --series-2: #e2ad70;
+    --series-3: #88afd8; --series-4: #d6c078; --series-5: #df99b8;
+    --series-6: #a7c888; --series-7: #b2a7e2; --series-8: #ed9690;
+    --diverge-neg: #ed9690; --accent: #70c7a9; --on-accent: #0c1917;
   }
 
   * { box-sizing: border-box; }
@@ -204,26 +162,119 @@
     .reset-btn { margin-left: 0; }
     .section-nav { display: none; }
   }
+  body { line-height: 1.5; }
+  button, input, select { font: inherit; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  [hidden] { display: none !important; }
+  .skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; background: var(--surface-1); padding: 12px; }
+  .skip-link:focus { top: 12px; }
+  .wrap, .topbar-inner { max-width: 1440px; padding-left: 40px; padding-right: 40px; }
+  .topbar-inner { min-height: 80px; }
+  .wordmark { align-items: center; gap: 12px; }
+  .brand-icon { width: 36px; height: 36px; color: var(--accent); }
+  .wordmark .mark { font-size: 23px; letter-spacing: -.04em; }
+  .wordmark .tagline { font-size: 12px; display: block; color: var(--text-secondary); }
+  .section-nav { margin-left: auto; gap: 8px; }
+  .section-nav a { padding: 12px 14px; border-radius: 8px; font-size: 13px; }
+  .section-nav a[aria-current="page"] { background: var(--surface-2); color: var(--accent); font-weight: 700; }
+  .theme-toggle { margin-left: 12px; min-height: 44px; }
+  .hero { padding: 44px 0 32px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: center; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; font-weight: 650; color: var(--accent); }
+  .hero h1 { font-size: clamp(32px, 3.5vw, 52px); line-height: 1.12; letter-spacing: -.055em; font-weight: 600; margin: 12px 0 18px; text-wrap: balance; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--text-secondary); max-width: 58ch; margin: 0; font-size: 15px; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .hero-meta span { border: 1px solid var(--border); border-radius: 5px; padding: 5px 9px; font-size: 12px; color: var(--text-secondary); }
+  .field-note { border-left: 2px solid var(--series-2); padding: 12px 0 12px 24px; }
+  .field-note h2 { font-size: 18px; margin: 8px 0; font-weight: 550; }
+  .field-note p { font-size: 13px; }
+  .field-note a { display: inline-block; margin-top: 12px; font-size: 13px; text-underline-offset: 4px; }
+  section.view { padding-top: 24px; border-top: 1px solid var(--border); }
+  section.view + section.view { margin-top: 0; }
+  .section-head h2 { font-size: 24px; font-weight: 550; letter-spacing: -.035em; }
+  .section-head .eyebrow { color: var(--accent); font-size: 12px; }
+  .section-head p.note { font-size: 14px; max-width: 90ch; }
+  .filters { gap: 16px 24px; padding: 18px 20px; border-radius: 10px; }
+  .filter-group { flex-wrap: wrap; gap: 8px; }
+  .filter-label { font-size: 12px; color: var(--text-secondary); }
+  select, input[type="text"] { min-height: 44px; font-size: 14px; border-color: var(--baseline); }
+  .chip { min-height: 44px; border-radius: 6px; font-size: 13px; padding: 8px 12px; }
+  .chip.active { background: var(--surface-2); color: var(--text-primary); border-color: var(--accent); }
+  .chip.active::before { content: '✓ '; color: var(--accent); }
+  .chip:hover { border-color: var(--accent); }
+  .reset-btn, .table-toggle { min-height: 44px; font-size: 13px; color: var(--text-secondary); }
+  .results-summary { font-size: 13px; color: var(--text-secondary); margin: 0 0 16px; }
+  .kpi-row { gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 24px; }
+  .kpi-tile { border-radius: 10px; padding: 20px; }
+  .kpi-tile:first-child { background: var(--surface-2); border-color: var(--accent); }
+  .kpi-tile .label { font-size: 13px; }
+  .kpi-tile .value { font-size: clamp(23px, 2.3vw, 32px); font-weight: 550; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .card { padding: 22px; border-radius: 10px; min-width: 0; box-shadow: none; }
+  .card h3 { font-size: 16px; letter-spacing: -.02em; }
+  .card p.note { font-size: 13px; margin-bottom: 20px; }
+  .grid { gap: 20px; }
+  .chart-scroll { overflow-x: auto; }
+  svg.chart { min-width: 460px; }
+  table.data-table td { padding: 10px 8px; }
+  table.data-table tbody tr:hover { background: var(--surface-2); }
+  .methodology { margin-top: 28px; padding: 20px 24px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; color: var(--text-secondary); }
+  .methodology summary { cursor: pointer; color: var(--text-primary); font-weight: 600; min-height: 28px; }
+  .methodology p { max-width: 100ch; }
+  footer.site { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; text-align: left; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12px; }
+  @media (min-width: 1200px) { #cruz-kpiRow { grid-template-columns: repeat(4, minmax(0, 1fr)); } #bruta-kpiRow { grid-template-columns: repeat(6, minmax(0, 1fr)); } #ben-kpiRow { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  @media (max-width: 1000px) { .wordmark .tagline { display: none; } .topbar-inner { gap: 10px; } }
+  @media (max-width: 860px) {
+    .wrap, .topbar-inner { padding-left: 20px; padding-right: 20px; }
+    .topbar-inner { flex-wrap: wrap; padding-top: 12px; padding-bottom: 8px; }
+    .section-nav { display: flex; width: 100%; order: 3; margin: 0; gap: 4px; }
+    .section-nav a { flex: 1; text-align: center; padding: 10px 5px; font-size: 12px; }
+    .theme-toggle { margin-left: auto; }
+    .hero { grid-template-columns: 1fr; gap: 24px; padding-top: 28px; }
+    .field-note { padding-top: 0; padding-bottom: 0; }
+    .filters { align-items: stretch; }
+    .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 16px; }
+    .card-head { flex-wrap: wrap; }
+    section.view { scroll-margin-top: 150px; }
+  }
+  @media (max-width: 420px) { .kpi-tile { padding: 14px; } .kpi-tile .value { font-size: 21px; white-space: nowrap; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Pular para o conteúdo</a>
 
 <div class="topbar">
   <div class="topbar-inner">
     <div class="wordmark">
-      <span class="mark">BATEIA</span>
-      <span class="tagline">Inteligência de dados da mineração brasileira</span>
+      <svg class="brand-icon" viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M3 11 18 3l15 8-15 8L3 11Zm0 7 15 8 15-8M3 25l15 8 15-8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <div><span class="mark">Estrato</span><span class="tagline">Observatório da mineração</span></div>
     </div>
-    <nav class="section-nav">
-      <a href="#bruta">Produção Bruta</a>
-      <a href="#beneficiada">Produção Beneficiada</a>
-      <a href="#beneficiamento">Beneficiamento</a>
+    <nav class="section-nav" aria-label="Áreas de análise">
+      <a href="#bruta">01 · Extração</a>
+      <a href="#beneficiada">02 · Processamento</a>
+      <a href="#beneficiamento">03 · Comparativo</a>
     </nav>
-    <button class="theme-toggle" id="themeToggle" type="button">🌓 Tema</button>
+    <button class="theme-toggle" id="themeToggle" type="button">Tema: sistema</button>
   </div>
 </div>
 
-<div class="wrap">
+<main class="wrap" id="main">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Brasil / Panorama mineral</div>
+      <h1>Uma nova camada de<br><span>leitura dos dados.</span></h1>
+      <p>Da extração ao processamento: explore a produção mineral brasileira e descubra o que os números revelam.</p>
+      <div class="hero-meta"><span>Fonte pública · ANM / RAL</span><span id="coverage-period"></span><span id="coverage-records"></span></div>
+    </div>
+    <aside class="field-note">
+      <div class="eyebrow">Sobre este observatório</div>
+      <h2>Dados reais. Leitura com contexto.</h2>
+      <p>Um projeto de portfólio que transforma bases declaratórias em análise exploratória, com rastreabilidade e atenção à qualidade.</p>
+      <a href="#metodologia">Conheça a metodologia ↗</a>
+    </aside>
+  </header>
 
   <!-- ================= PRODUÇÃO BRUTA ================= -->
   <section class="view" id="bruta">
@@ -237,9 +288,9 @@
     <div class="filters">
       <div class="filter-group">
         <span class="filter-label">Ano</span>
-        <select id="bruta-anoFrom"></select>
+        <select id="bruta-anoFrom" aria-label="Ano inicial"></select>
         <span style="color:var(--text-muted)">–</span>
-        <select id="bruta-anoTo"></select>
+        <select id="bruta-anoTo" aria-label="Ano final"></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Região</span>
@@ -251,33 +302,34 @@
       </div>
       <div class="filter-group">
         <span class="filter-label">Substância</span>
-        <input type="text" id="bruta-substanciaSearch" placeholder="buscar…" size="14" />
+        <input type="text" id="bruta-substanciaSearch" aria-label="Buscar substância" placeholder="buscar…" size="14" />
       </div>
       <button class="reset-btn" id="bruta-resetFilters" type="button">Limpar filtros</button>
     </div>
 
+    <p class="results-summary" id="bruta-results" role="status" aria-live="polite"></p>
     <div class="kpi-row" id="bruta-kpiRow"></div>
 
     <div class="grid">
       <div class="card">
         <h3>Produção bruta (minério ROM) por ano</h3>
         <p class="note">Toneladas somadas por ano-base, no recorte filtrado</p>
-        <div id="bruta-chartProducao"></div>
+        <div class="chart-scroll" id="bruta-chartProducao" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Valor de venda por ano</h3>
         <p class="note">R$ somados por ano-base, no recorte filtrado</p>
-        <div id="bruta-chartValor"></div>
+        <div class="chart-scroll" id="bruta-chartValor" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Top substâncias por valor de venda</h3>
         <p class="note">Somatório de R$ no período e recorte selecionados</p>
-        <div id="bruta-chartSubstancias"></div>
+        <div class="chart-scroll" id="bruta-chartSubstancias" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Top estados (UF) por valor de venda</h3>
         <p class="note">Somatório de R$ no período e recorte selecionados</p>
-        <div id="bruta-chartUf"></div>
+        <div class="chart-scroll" id="bruta-chartUf" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card wide">
         <div class="card-head">
@@ -285,14 +337,14 @@
           <button class="table-toggle" data-target="bruta-tableDestino" data-chart="bruta-chartDestino" type="button">Ver tabela</button>
         </div>
         <p class="note">Participação (%) por quantidade — venda, transformação/consumo e transferência</p>
-        <div id="bruta-chartDestino"></div>
+        <div class="chart-scroll" id="bruta-chartDestino" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
         <div class="legend" id="bruta-legendDestino"></div>
         <div id="bruta-tableDestino" class="table-scroll" style="display:none; margin-top:10px;"></div>
       </div>
       <div class="card">
         <h3>Produção por classe de substância</h3>
         <p class="note">Valor de venda somado, por classe</p>
-        <div id="bruta-chartClasse"></div>
+        <div class="chart-scroll" id="bruta-chartClasse" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <div class="card-head">
@@ -317,9 +369,9 @@
     <div class="filters">
       <div class="filter-group">
         <span class="filter-label">Ano</span>
-        <select id="ben-anoFrom"></select>
+        <select id="ben-anoFrom" aria-label="Ano inicial"></select>
         <span style="color:var(--text-muted)">–</span>
-        <select id="ben-anoTo"></select>
+        <select id="ben-anoTo" aria-label="Ano final"></select>
       </div>
       <div class="filter-group">
         <span class="filter-label">Região</span>
@@ -331,33 +383,34 @@
       </div>
       <div class="filter-group">
         <span class="filter-label">Substância</span>
-        <input type="text" id="ben-substanciaSearch" placeholder="buscar…" size="14" />
+        <input type="text" id="ben-substanciaSearch" aria-label="Buscar substância" placeholder="buscar…" size="14" />
       </div>
       <button class="reset-btn" id="ben-resetFilters" type="button">Limpar filtros</button>
     </div>
 
+    <p class="results-summary" id="ben-results" role="status" aria-live="polite"></p>
     <div class="kpi-row" id="ben-kpiRow"></div>
 
     <div class="grid">
       <div class="card">
         <h3>Valor de venda por ano</h3>
         <p class="note">R$ somados por ano-base, no recorte filtrado</p>
-        <div id="ben-chartValor"></div>
+        <div class="chart-scroll" id="ben-chartValor" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Valor movimentado total por ano</h3>
         <p class="note">Venda + consumo na usina + transferência (R$)</p>
-        <div id="ben-chartMovimentado"></div>
+        <div class="chart-scroll" id="ben-chartMovimentado" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Top substâncias por valor de venda</h3>
         <p class="note">Somatório de R$ no período e recorte selecionados</p>
-        <div id="ben-chartSubstancias"></div>
+        <div class="chart-scroll" id="ben-chartSubstancias" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card">
         <h3>Top estados (UF) por valor de venda</h3>
         <p class="note">Somatório de R$ no período e recorte selecionados</p>
-        <div id="ben-chartUf"></div>
+        <div class="chart-scroll" id="ben-chartUf" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card wide">
         <div class="card-head">
@@ -365,14 +418,14 @@
           <button class="table-toggle" data-target="ben-tableDestino" data-chart="ben-chartDestino" type="button">Ver tabela</button>
         </div>
         <p class="note">Participação (%) por valor (R$) — quantidades não somadas por virem em unidades distintas (t/kg/ct)</p>
-        <div id="ben-chartDestino"></div>
+        <div class="chart-scroll" id="ben-chartDestino" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
         <div class="legend" id="ben-legendDestino"></div>
         <div id="ben-tableDestino" class="table-scroll" style="display:none; margin-top:10px;"></div>
       </div>
       <div class="card">
         <h3>Produção por classe de substância</h3>
         <p class="note">Valor de venda somado, por classe</p>
-        <div id="ben-chartClasse"></div>
+        <div class="chart-scroll" id="ben-chartClasse" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
     </div>
   </section>
@@ -382,8 +435,8 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">Cruzamento Bruta × Beneficiada</p>
-        <h2>Quanto valor o beneficiamento agrega</h2>
-        <p class="note">Valor de venda declarado como beneficiada menos o declarado como bruta, por substância (R$, 2010–2025). Comparação por valor — a única métrica comum às duas bases — e limitada a substâncias com pelo menos 5 registros de cada lado.</p>
+        <h2>Duas bases, diferentes perspectivas</h2>
+        <p class="note">Valor de venda declarado como beneficiada menos o declarado como bruta, por substância (R$, 2010–2025). Comparação por valor — a única métrica comum às duas bases — e limitada a substâncias com pelo menos 5 registros de cada lado. Recorte fixo: os filtros das outras áreas não se aplicam aqui.</p>
       </div>
     </div>
 
@@ -391,24 +444,31 @@
 
     <div class="grid">
       <div class="card wide">
-        <h3>Valor agregado por substância</h3>
-        <p class="note">Valor de venda (beneficiada − bruta); azul = agrega valor ao beneficiar, vermelho = mais valor é capturado já na venda bruta</p>
-        <div id="cruz-chartAgregado"></div>
+        <h3>Diferença de valor declarado por substância</h3>
+        <p class="note">Valor de venda (beneficiada − bruta); positivo = maior total na beneficiada; negativo = maior total na bruta</p>
+        <div class="chart-scroll" id="cruz-chartAgregado" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
       </div>
       <div class="card wide">
         <h3>Valor de venda nacional — bruta vs. beneficiada, por ano</h3>
         <p class="note">Totais nacionais de cada base, não restritos às substâncias comparáveis acima</p>
-        <div id="cruz-chartAnual"></div>
+        <div class="chart-scroll" id="cruz-chartAnual" tabindex="0" role="region" aria-label="Gráfico; use as setas para rolar"></div>
         <div class="legend" id="cruz-legendAnual"></div>
       </div>
     </div>
   </section>
 
-  <footer class="site">
-    Fonte dos dados: Relatório Anual de Lavra (RAL) — ANM
-  </footer>
+  <details class="methodology" id="metodologia">
+    <summary>Como ler os dados · metodologia e limites</summary>
+    <p>Fonte: Relatório Anual de Lavra (RAL), ANM. Os registros são declaratórios e podem conter inconsistências. Valores monetários são nominais, sem correção pela inflação. O último ano da série pode ter cobertura diferente dos anteriores.</p>
+    <p>Na produção bruta, quantidades são expressas em toneladas. Na beneficiada, as unidades variam (t, kg e ct); por isso, agregamos somente valores monetários. “Valor movimentado” soma venda, consumo/transformação e transferência; não equivale a receita.</p>
+    <p>O comparativo cruza totais por substância, sem parear operações ou volumes. A diferença e a razão entre as bases não medem margem, retorno ou efeito causal do beneficiamento. Ter cinco registros em cada base é um critério de cobertura, não uma garantia de comparabilidade.</p>
+    <p>Projeto de Caio Analytics · Python, Polars, dbt, DuckDB, Parquet e visualização em SVG. A diversidade da stack é intencional: este é um case de engenharia e análise de dados.</p>
+    <a href="https://caio-analytics.github.io/Estrato/dbt/" target="_blank" rel="noopener noreferrer">Explorar modelos e linhagem dbt ↗</a><br>
+    <a href="https://github.com/Caio-Analytics/Estrato" target="_blank" rel="noopener noreferrer">Explorar código e decisões técnicas ↗</a>
+  </details>
+  <footer class="site"><span>Estrato / Observatório da mineração brasileira</span><span>ANM · RAL / Projeto de portfólio por Caio Analytics</span></footer>
 
-</div>
+</main>
 
 <div class="tooltip" id="tooltip"></div>
 

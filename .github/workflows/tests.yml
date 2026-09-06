@@ -18,7 +18,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Bronze (extract + load)
         run: python -c "from etl import bronze; from etl.config import BRUTA, BENEFICIADA; bronze.run_bronze(BRUTA); bronze.run_bronze(BENEFICIADA)"
@@ -36,6 +36,12 @@ jobs:
 
       - name: Build dashboard
         run: python -c "from dashboard.build_dashboard import build_dashboard; build_dashboard()"
+
+      - name: Install browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Dashboard browser regressions
+        run: python scripts/check_dashboard.py
 
       - name: Upload dashboard artifact
         uses: actions/upload-artifact@v4

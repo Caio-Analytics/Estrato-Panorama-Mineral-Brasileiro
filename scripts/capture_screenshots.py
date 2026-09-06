@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 DASHBOARD_PORT = 8743
 DBT_DOCS_PORT = 8744
 OUT_DIR = PROJECT_ROOT / "docs" / "screenshots"
-VIEWPORT = {"width": 1440, "height": 900}
+VIEWPORT = {"width": 1440, "height": 1100}
 DBT_DOCS_VIEWPORT = {"width": 1600, "height": 1000}
 
 
@@ -50,7 +50,7 @@ def capture_dashboard(browser) -> None:
 
     for anchor in ["bruta", "beneficiada", "beneficiamento"]:
         page = browser.new_page(viewport=VIEWPORT, color_scheme="dark")
-        page.goto(url, wait_until="networkidle")
+        page.goto(url + "#" + anchor, wait_until="networkidle")
         page.evaluate("document.documentElement.setAttribute('data-theme','dark')")
         page.evaluate(f"document.getElementById('{anchor}').scrollIntoView()")
         page.wait_for_timeout(300)
@@ -62,6 +62,11 @@ def capture_dashboard(browser) -> None:
     page.evaluate("document.documentElement.setAttribute('data-theme','light')")
     page.wait_for_timeout(300)
     page.screenshot(path=str(OUT_DIR / "bruta_light.png"))
+    page.close()
+
+    page = browser.new_page(viewport={"width": 375, "height": 900}, color_scheme="light")
+    page.goto(url, wait_until="networkidle")
+    page.screenshot(path=str(OUT_DIR / "mobile_light.png"), full_page=True)
     page.close()
 
 

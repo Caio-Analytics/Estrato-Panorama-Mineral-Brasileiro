@@ -1,14 +1,27 @@
-# Bateia
+# Estrato · Observatório da Mineração
 
-Pipeline de dados sobre a mineração brasileira: extração, transformação em
-dbt, cruzamento SQL e dashboard. Nome vem do instrumento usado para separar
-mineral valioso do sedimento.
+**Uma nova camada de leitura dos dados.** Um case de engenharia e análise
+exploratória da mineração brasileira: do CSV público ao dashboard.
+Estrato conecta as camadas geológicas às camadas de transformação dos dados.
+O projeto se chamava Bateia e agora se chama Estrato.
 
-**[→ Dashboard](output/dashboard.html)** (HTML único, sem dependências,
-abre offline). **[→ Documentação dbt](docs/dbt/index.html)** (linhagem dos
-modelos, testes, descrições de coluna, gerada automaticamente).
+**[Abrir dashboard online](https://caio-analytics.github.io/Estrato/)** ·
+[Versão offline](output/dashboard.html) ·
+[Documentação e linhagem dbt](https://caio-analytics.github.io/Estrato/dbt/) ·
+[Decisões de design](docs/design.md)
 
-![Visão geral do dashboard](docs/screenshots/bruta_dark.png)
+![Dashboard Estrato](docs/screenshots/bruta_light.png)
+
+### O que este case demonstra
+
+- **Engenharia:** ingestão de CSVs brasileiros em Polars e contratos por dataset.
+- **Analytics engineering:** transformação em dbt, modelos SQL, testes e linhagem.
+- **Análise:** cuidado com unidades, cobertura e comparabilidade das fontes.
+- **Produto:** navegação responsiva, filtros, temas e acesso por teclado.
+- **Entrega:** CI, testes no navegador e HTML autocontido para uso offline.
+
+A variedade de tecnologias é intencional para demonstrar habilidades; não é
+uma recomendação de complexidade para um conjunto de dados deste tamanho.
 
 ## Sobre o projeto
 
@@ -35,20 +48,19 @@ não compartilham unidade: Bruta é sempre em toneladas; Beneficiada varia
 por linha (t, kg, ct — diamante em quilates, bauxita em toneladas). Ver
 [`transform/models/staging/`](transform/models/staging/).
 
-## O achado central: quanto o beneficiamento agrega
+## O que o comparativo permite concluir
 
-Cruzando as duas bases por substância
-([`transform/models/marts/cruzamento/`](transform/models/marts/cruzamento/)),
-comparando valor de venda bruto vs. beneficiado:
+O [cruzamento SQL](transform/models/marts/cruzamento/) agrega os valores de
+venda declarados por substância nas duas bases. Os totais acumulados são
+R$ 88,7 bi na bruta e R$ 2,39 tri na beneficiada (2010–2025).
 
-![Cruzamento Bruta x Beneficiada](docs/screenshots/beneficiamento_dark.png)
+![Comparativo entre bases](docs/screenshots/beneficiamento_dark.png)
 
-Metais mostram multiplicadores extremos ao serem processados (Ferro 132x,
-Cobre ~4.250x, Níquel ~5.590x); granulados não-metálicos (areia, rocha
-ornamental, saibro) mostram valor agregado negativo — mais valor é
-capturado já na venda bruta. Nos totais nacionais o valor beneficiado é uma
-ordem de grandeza acima do bruto: R$ 88,7 bi vs. R$ 2,39 tri em vendas
-acumuladas.
+**As razões entre esses totais não medem o valor adicionado pelo processamento.**
+As bases não pareiam operações, empresas ou volumes; cobertura e composição
+são diferentes. O critério de cinco registros por lado reduz comparações com
+pouca cobertura, mas não estabelece equivalência. Valores são nominais, sem
+ajuste pela inflação. Diferenças negativas não demonstram perda econômica.
 
 ## Arquitetura
 
@@ -81,8 +93,7 @@ data/raw/{Producao_Bruta,Producao_Beneficiada}.csv (cp1252, decimal BR)
 └────────────────┘
 ```
 
-`python -m etl.pipeline` roda tudo em menos de 2s (Bronze → `dbt build` →
-dashboard). STAGING → MARTS é `dbt build`: 18 modelos, 57 testes de schema
+`python -m etl.pipeline` executa Bronze → `dbt build` → dashboard; o tempo depende do ambiente. STAGING → MARTS é `dbt build`: 18 modelos, 56 testes de schema
 + 1 teste singular.
 
 ## Analytics Engineering com dbt
@@ -102,7 +113,7 @@ A camada de transformação é um projeto dbt em [`transform/`](transform/):
 - **staging → marts** — `stg_*` tipa 1:1 com a fonte; `marts/core` monta
   os fatos; `marts/bruta`, `marts/beneficiada` e `marts/cruzamento`
   agregam, cada camada via `ref()`.
-- **57 testes de schema + 1 singular** — `not_null`, `unique`,
+- **56 testes de schema + 1 singular** — `not_null`, `unique`,
   `accepted_values`, um `relationships` validando UF contra o seed, e
   [`tests/assert_valor_agregado_matches_diferenca.sql`](transform/tests/assert_valor_agregado_matches_diferenca.sql).
 - **Docs e linhagem gerados** — `dbt docs generate --static` produz
@@ -148,9 +159,16 @@ Depois abra `output/dashboard.html` no navegador — não precisa de servidor.
 
 ```bash
 python -m pytest tests/ -v
+# Comandos dbt abaixo executados na raiz do repositório
+export BATEIA_DUCKDB_PATH="$PWD/data/warehouse/bateia.duckdb"
+export BATEIA_DATA_DIR="$PWD/data"
 dbt build --project-dir transform --profiles-dir transform
 dbt docs generate --static --project-dir transform --profiles-dir transform
+cp transform/target/static_index.html docs/dbt/index.html
 python -m etl.quality_report
+pip install -r requirements-dev.txt
+python -m playwright install chromium
+python scripts/check_dashboard.py
 python scripts/capture_screenshots.py
 ```
 
@@ -192,10 +210,17 @@ tests/
 
 ## Dashboard
 
-Três seções em uma página: **Produção Bruta** e **Produção Beneficiada**
-(filtros de ano, região, classe e busca por substância) e
-**Beneficiamento**, o cruzamento entre as duas. Tema claro/escuro segue o
-sistema por padrão, com alternância manual persistida localmente.
+Três áreas navegáveis: **Extração**, **Processamento** e **Comparativo**.
+As duas primeiras têm filtros independentes por ano, região, classe e busca
+por substância, com ou sem acentos. A terceira compara todo o período e
+explicita esse escopo. O tema sistema/claro/escuro é persistido localmente.
+
+Filtros são botões acessíveis por teclado e os resultados têm anúncio de estado.
+Detalhes dos gráficos aparecem no foco e no ponteiro. Em telas pequenas, gráficos
+preservam a legibilidade em regiões com rolagem horizontal.
+
+O build padrão sincroniza `output/dashboard.html` e `docs/index.html`, usado pelo
+GitHub Pages. A metodologia explica unidades, cobertura e limites de interpretação.
 
 ## Screenshots
 

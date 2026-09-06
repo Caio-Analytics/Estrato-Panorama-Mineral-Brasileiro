@@ -55,7 +55,8 @@ class TestDashboardBuild:
     """Requires `dbt build` to have already run."""
 
     @pytest.fixture(scope="class")
-    def payload(self):
+    @staticmethod
+    def payload():
         if not DUCKDB_PATH.exists():
             pytest.skip(f"{DUCKDB_PATH} not found — run `dbt build` first")
 
@@ -89,7 +90,7 @@ class TestDashboardBuild:
         out = build_dashboard(out_path=tmp_path / "dashboard.html")
         html = out.read_text(encoding="utf-8")
 
-        assert "<title>Bateia</title>" in html
+        assert "<title>Estrato · Observatório da Mineração</title>" in html
         assert "__DATA_JSON__" not in html  # placeholder must be substituted
         assert "__APP_JS__" not in html
 

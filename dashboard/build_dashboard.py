@@ -7,7 +7,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from etl.config import DASHBOARD_HTML, DUCKDB_PATH
+from etl.config import DASHBOARD_HTML, DOCS_DIR, DUCKDB_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def build_dataset_payload(con: duckdb.DuckDBPyConnection, table: str, uniform_un
 
 def build_cruzamento_payload(con: duckdb.DuckDBPyConnection) -> dict:
     por_sub = con.execute("select * from main_marts.cruzamento_por_substancia_comparavel").pl()
-    por_ano = con.execute("select * from main_marts.cruzamento_por_ano").pl()
+    por_ano = con.execute("select * from main_marts.cruzamento_por_ano order by ano").pl()
     resumo = con.execute("select * from main_marts.cruzamento_resumo").pl().row(0, named=True)
 
     return {
@@ -93,8 +93,8 @@ def build_dashboard(out_path: Path = DASHBOARD_HTML, duckdb_path: Path = DUCKDB_
         con.close()
 
     data_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    # avoid a stray "</script" in the data closing the inline <script> tag early
-    data_json = data_json.replace("</script", "<\\/script")
+    # Escape mixed-case closing tags too: dataset text must stay inside JSON.
+    data_json = data_json.replace("<", "\\u003c")
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     app_js = APP_JS_PATH.read_text(encoding="utf-8")
@@ -103,6 +103,9 @@ def build_dashboard(out_path: Path = DASHBOARD_HTML, duckdb_path: Path = DUCKDB_
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
+    if out_path.resolve() == DASHBOARD_HTML.resolve():
+        DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        (DOCS_DIR / "index.html").write_text(html, encoding="utf-8")
 
     size_kb = out_path.stat().st_size / 1024
     n_rows = len(payload["bruta"]["rows"]) + len(payload["beneficiada"]["rows"])

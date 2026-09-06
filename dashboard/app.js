@@ -18,7 +18,7 @@
   function fmtT(n) { return fmtCompact(n) + " t"; }
   function fmtPct(n) { return (n * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%"; }
   function fmtInt(n) { return Math.round(n).toLocaleString("pt-BR"); }
-  function fmtX(n) { return n.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "x"; }
+  function fmtX(n) { if (n == null || !Number.isFinite(n)) return "—"; return n.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "x"; }
 
   // ---------------------------------------------------------------- dom/svg
   var SVGNS = "http://www.w3.org/2000/svg";
@@ -32,6 +32,18 @@
     var e = document.createElementNS(SVGNS, tag);
     if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
     if (parent) parent.appendChild(e);
+    if (attrs && attrs.style && attrs.style.indexOf("cursor:pointer") !== -1) {
+      e.setAttribute("tabindex", "0");
+      e.setAttribute("role", "img");
+      e.setAttribute("aria-label", "Detalhe do gráfico");
+      e.addEventListener("focus", function () {
+        var rect = e.getBoundingClientRect();
+        e.dispatchEvent(new PointerEvent("pointermove", { clientX: rect.x + rect.width / 2, clientY: rect.y }));
+        e.setAttribute("aria-label", tooltipEl.textContent);
+      });
+      e.addEventListener("blur", function () { e.dispatchEvent(new PointerEvent("pointerleave")); });
+      e.addEventListener("keydown", function (event) { if (event.key === "Escape") hideTooltip(); });
+    }
     return e;
   }
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
@@ -63,7 +75,7 @@
   // ---------------------------------------------------------------- line chart
   function drawLineChart(container, years, values, colorVar, formatValue) {
     clear(container);
-    var W = 560, H = 230, ML = 56, MR = 14, MT = 14, MB = 26;
+    var W = 560, H = 230, ML = 88, MR = 20, MT = 14, MB = 26;
     var plotW = W - ML - MR, plotH = H - MT - MB;
     var root = svg("svg", { class: "chart", viewBox: "0 0 " + W + " " + H }, container);
 
@@ -114,7 +126,7 @@
     // series: [{name, colorVar, values:[...]}]
     clear(container);
     if (legendContainer) clear(legendContainer);
-    var W = 900, H = 240, ML = 60, MR = 14, MT = 14, MB = 26;
+    var W = 900, H = 240, ML = 88, MR = 20, MT = 14, MB = 26;
     var plotW = W - ML - MR, plotH = H - MT - MB;
     var root = svg("svg", { class: "chart", viewBox: "0 0 " + W + " " + H }, container);
     if (!years.length) { el("div", { class: "empty-msg", html: "Sem dados para o recorte selecionado." }, container); return; }
@@ -169,7 +181,7 @@
   function drawHBarChart(container, items, colorVar, formatValue) {
     clear(container);
     if (!items.length) { el("div", { class: "empty-msg", html: "Sem dados para o recorte selecionado." }, container); return; }
-    var W = 560, rowH = 26, barH = 16, ML = 168, MR = 74, MT = 6, MB = 6;
+    var W = 560, rowH = 26, barH = 16, ML = 168, MR = 96, MT = 6, MB = 6;
     var n = items.length, H = MT + MB + n * rowH;
     var root = svg("svg", { class: "chart", viewBox: "0 0 " + W + " " + H }, container);
     var maxV = Math.max.apply(null, items.map(function (d) { return d.value; }).concat([0])) || 1;
@@ -181,7 +193,7 @@
       var labelText = items[i].label;
       var label = svg("text", { x: ML - 10, y: y + barH / 2 + 4, "text-anchor": "end", class: "bar-label" }, root);
       label.textContent = labelText.length > 24 ? labelText.slice(0, 23) + "…" : labelText;
-      el("title", {}, label).textContent = labelText;
+      svg("title", {}, label).textContent = labelText;
       svg("rect", { x: ML, y: y, width: barW, height: barH, rx: 4, style: "fill:" + colorVar }, root);
       var valLabel = svg("text", { x: ML + barW + 8, y: y + barH / 2 + 4, class: "bar-label" }, root);
       valLabel.textContent = formatValue(items[i].value);
@@ -200,7 +212,7 @@
     // items: [{label, value}] — value can be negative
     clear(container);
     if (!items.length) { el("div", { class: "empty-msg", html: "Sem dados para o recorte selecionado." }, container); return; }
-    var W = 640, rowH = 26, barH = 16, ML = 190, MR = 64, MT = 6, MB = 6;
+    var W = 900, rowH = 26, barH = 16, ML = 230, MR = 100, MT = 6, MB = 6;
     var n = items.length, H = MT + MB + n * rowH;
     var root = svg("svg", { class: "chart", viewBox: "0 0 " + W + " " + H }, container);
     var maxAbs = Math.max.apply(null, items.map(function (d) { return Math.abs(d.value); }).concat([1]));
@@ -220,7 +232,7 @@
       var labelText = items[i].label;
       var label = svg("text", { x: ML - 12, y: y + barH / 2 + 4, "text-anchor": "end", class: "bar-label" }, root);
       label.textContent = labelText.length > 26 ? labelText.slice(0, 25) + "…" : labelText;
-      el("title", {}, label).textContent = labelText;
+      svg("title", {}, label).textContent = labelText;
       svg("rect", { x: x, y: y, width: w, height: barH, rx: 4, style: "fill:" + color }, root);
       var valX = isPos ? x + w + 8 : x - 8;
       var valLabel = svg("text", { x: valX, y: y + barH / 2 + 4, "text-anchor": isPos ? "start" : "end", class: "bar-label" }, root);
@@ -228,7 +240,7 @@
       (function (idx, yy) {
         var hit = svg("rect", { x: ML, y: yy, width: plotW, height: barH, style: "fill:transparent;cursor:pointer" }, root);
         hit.addEventListener("pointermove", function (ev) {
-          showTooltip(ev.clientX, ev.clientY, '<div class="t-title">' + esc(items[idx].label) + "</div>" + ttRow("valor agregado", formatValue(items[idx].value)));
+          showTooltip(ev.clientX, ev.clientY, '<div class="t-title">' + esc(items[idx].label) + "</div>" + ttRow("diferença declarada", formatValue(items[idx].value)));
         });
         hit.addEventListener("pointerleave", hideTooltip);
       })(i, y);
@@ -290,6 +302,8 @@
     }
   }
 
+  function normalizeSearch(value) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+
   function topN(map, key, n) {
     return Array.from(map.entries()).map(function (e) { return { label: e[0], value: e[1][key] }; })
       .sort(function (a, b) { return b.value - a.value; }).slice(0, n);
@@ -310,12 +324,12 @@
     function ufRegiao(ufI) { return dataset.regiaoByUf[dataset.ufs[ufI]]; }
 
     function filteredRows() {
-      var q = state.substancia.trim().toLowerCase();
+      var q = normalizeSearch(state.substancia.trim());
       return dataset.rows.filter(function (r) {
         if (r[cols.ANO] < state.anoFrom || r[cols.ANO] > state.anoTo) return false;
         if (!state.regioes.has(ufRegiao(r[cols.UF]))) return false;
         if (!state.classes.has(dataset.classes[r[cols.CL]])) return false;
-        if (q && dataset.substancias[r[cols.SB]].toLowerCase().indexOf(q) === -1) return false;
+        if (q && normalizeSearch(dataset.substancias[r[cols.SB]]).indexOf(q) === -1) return false;
         return true;
       });
     }
@@ -364,9 +378,9 @@
       var host = byId(prefix + "-kpiRow");
       if (!host) return;
       clear(host);
-      var tiles = [{ label: "Registros no recorte", value: fmtInt(agg.n) }];
+      var tiles = [{ label: "Valor de venda", value: fmtBRL(agg.totValorVenda) }];
       if (opts.hasProducao) tiles.push({ label: "Produção bruta (ROM)", value: fmtT(agg.totQtdRom) });
-      tiles.push({ label: "Valor de venda", value: fmtBRL(agg.totValorVenda) });
+      tiles.push({ label: "Registros no recorte", value: fmtInt(agg.n) });
       tiles.push({ label: "Valor movimentado total", value: fmtBRL(agg.totValorMov) });
       tiles.push({ label: "Substâncias no recorte", value: fmtInt(agg.nSubstancias) });
       tiles.push({ label: "UFs no recorte", value: fmtInt(agg.nUfs) });
@@ -408,16 +422,16 @@
       var thead = el("thead", {}, t); var trh = el("tr", {}, thead);
       ["Ano", "Produção ROM (t)", "Valor venda (R$)", "Cresc. valor YoY", "Registros"].forEach(function (h) { el("th", {}, trh).textContent = h; });
       var tbody = el("tbody", {}, t);
-      var prevValor = null;
+      var prevValor = null, prevAno = null;
       anos.forEach(function (a) {
         var d = agg.byAno.get(a);
         var tr = el("tr", {}, tbody);
         el("td", {}, tr).textContent = a;
         el("td", {}, tr).textContent = fmtT(d.qtdRom);
         el("td", {}, tr).textContent = fmtBRL(d.valorVenda);
-        el("td", {}, tr).textContent = prevValor ? fmtPct((d.valorVenda - prevValor) / prevValor) : "—";
+        el("td", {}, tr).textContent = prevValor && a === prevAno + 1 ? fmtPct((d.valorVenda - prevValor) / prevValor) : "—";
         el("td", {}, tr).textContent = fmtInt(d.n);
-        prevValor = d.valorVenda;
+        prevValor = d.valorVenda; prevAno = a;
       });
     }
 
@@ -425,6 +439,10 @@
       var rows = filteredRows();
       var agg = aggregate(rows);
       renderKpis(agg);
+      byId(prefix + "-results").textContent = rows.length
+        ? fmtInt(rows.length) + " registros · " + state.anoFrom + "–" + state.anoTo + " · " + agg.nUfs + " UFs · filtros independentes por área"
+        : "Nenhum registro encontrado. Ajuste a busca ou limpe os filtros para voltar ao panorama completo.";
+      hideTooltip();
 
       var anos = Array.from(agg.byAno.keys()).sort(function (a, b) { return a - b; });
 
@@ -469,20 +487,22 @@
 
       var regiaoChips = byId(prefix + "-regiaoChips");
       Object.keys(dataset.regioesSet).forEach(function (r) {
-        var chip = el("div", { class: "chip active", html: r }, regiaoChips);
+        var chip = el("button", { class: "chip active", type: "button", "aria-pressed": "true", html: r }, regiaoChips);
         chip.addEventListener("click", function () {
           if (state.regioes.has(r)) { if (state.regioes.size > 1) { state.regioes.delete(r); chip.classList.remove("active"); } }
           else { state.regioes.add(r); chip.classList.add("active"); }
+          chip.setAttribute("aria-pressed", chip.classList.contains("active"));
           renderAll();
         });
       });
 
       var classeChips = byId(prefix + "-classeChips");
       dataset.classes.forEach(function (c) {
-        var chip = el("div", { class: "chip active", html: c }, classeChips);
+        var chip = el("button", { class: "chip active", type: "button", "aria-pressed": "true", html: c }, classeChips);
         chip.addEventListener("click", function () {
           if (state.classes.has(c)) { if (state.classes.size > 1) { state.classes.delete(c); chip.classList.remove("active"); } }
           else { state.classes.add(c); chip.classList.add("active"); }
+          chip.setAttribute("aria-pressed", chip.classList.contains("active"));
           renderAll();
         });
       });
@@ -495,13 +515,14 @@
       });
 
       byId(prefix + "-resetFilters").addEventListener("click", function () {
+        clearTimeout(debounceTimer);
         state.anoFrom = dataset.anoMin; state.anoTo = dataset.anoMax;
         state.regioes = new Set(Object.keys(dataset.regioesSet));
         state.classes = new Set(dataset.classes);
         state.substancia = "";
         anoFrom.value = state.anoFrom; anoTo.value = state.anoTo; search.value = "";
-        Array.prototype.forEach.call(regiaoChips.children, function (c) { c.classList.add("active"); });
-        Array.prototype.forEach.call(classeChips.children, function (c) { c.classList.add("active"); });
+        Array.prototype.forEach.call(regiaoChips.children, function (c) { c.classList.add("active"); c.setAttribute("aria-pressed", "true"); });
+        Array.prototype.forEach.call(classeChips.children, function (c) { c.classList.add("active"); c.setAttribute("aria-pressed", "true"); });
         renderAll();
       });
     }
@@ -513,13 +534,16 @@
   // ================================================================ init
   function initTableToggles() {
     Array.prototype.forEach.call(document.querySelectorAll(".table-toggle"), function (btn) {
+      btn.setAttribute("aria-controls", btn.getAttribute("data-target"));
+      btn.setAttribute("aria-expanded", byId(btn.getAttribute("data-target")).style.display !== "none");
       btn.addEventListener("click", function () {
         var targetId = btn.getAttribute("data-target");
         var chartId = btn.getAttribute("data-chart");
         var host = byId(targetId);
         var show = host.style.display === "none";
         host.style.display = show ? "block" : "none";
-        btn.textContent = show ? "Ver gráfico" : "Ver tabela";
+        btn.textContent = show ? (chartId ? "Ver gráfico" : "Ocultar tabela") : "Ver tabela";
+        btn.setAttribute("aria-expanded", show);
         if (chartId) byId(chartId).style.display = show ? "none" : "block";
       });
     });
@@ -530,16 +554,50 @@
     function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* no-op */ } }
     var root = document.documentElement;
     var order = ["system", "light", "dark"];
-    var saved = safeGet("bateia-theme") || "system";
+    var saved = safeGet("estrato-theme") || safeGet("bateia-theme") || "system";
+    if (order.indexOf(saved) === -1) saved = "system";
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
     function applyTheme(t) {
-      if (t === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
-      safeSet("bateia-theme", t);
+      root.setAttribute("data-theme", t === "system" ? (media.matches ? "dark" : "light") : t);
+      byId("themeToggle").textContent = "Tema: " + { system: "sistema", light: "claro", dark: "escuro" }[t];
+      safeSet("estrato-theme", t);
     }
     applyTheme(saved);
+    media.addEventListener("change", function () { if (saved === "system") applyTheme(saved); });
     byId("themeToggle").addEventListener("click", function () {
       saved = order[(order.indexOf(saved) + 1) % order.length];
       applyTheme(saved);
     });
+  }
+
+  function initNavigation() {
+    var ids = ["bruta", "beneficiada", "beneficiamento"];
+    function navigate() {
+      var id = location.hash.slice(1);
+      if (ids.indexOf(id) === -1) {
+        if (id === "metodologia") byId(id).open = true;
+        return;
+      }
+      ids.forEach(function (key) {
+        byId(key).hidden = key !== id;
+        var link = document.querySelector('.section-nav a[href="#' + key + '"]');
+        if (key === id) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+      });
+      hideTooltip();
+    }
+    ids.forEach(function (id) { byId(id).hidden = id !== "bruta"; });
+    document.querySelector('.section-nav a').setAttribute("aria-current", "page");
+    window.addEventListener("hashchange", function () {
+      if (!location.hash) {
+        ids.forEach(function (id) { byId(id).hidden = id !== "bruta"; });
+        document.querySelectorAll('.section-nav a').forEach(function (link, i) {
+          if (!i) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+        });
+      } else navigate();
+    });
+    navigate();
+    byId("coverage-period").textContent = Math.min(DATA.bruta.anoMin, DATA.beneficiada.anoMin) + "–" + Math.max(DATA.bruta.anoMax, DATA.beneficiada.anoMax);
+    byId("coverage-records").textContent = fmtInt(DATA.bruta.rows.length + DATA.beneficiada.rows.length) + " registros públicos";
   }
 
   function initCruzamento() {
@@ -550,9 +608,9 @@
     var maxAdd = cruz.porSubstanciaComparavel.reduce(function (best, r) { return r.valorAgregado > (best ? best.valorAgregado : -Infinity) ? r : best; }, null);
     var tiles = [
       { label: "Substâncias em ambas as bases", value: fmtInt(cruz.resumo.nSubstanciasAmbas) },
-      { label: "Substâncias comparáveis (≥5 registros/lado)", value: fmtInt(cruz.resumo.nSubstanciasComparaveis) },
-      { label: "Maior valor agregado", value: maxAdd ? maxAdd.substancia : "—" },
-      { label: "Fator de agregação (a maior)", value: maxAdd ? fmtX(maxAdd.fatorAgregacao) : "—" },
+      { label: "Substâncias com ≥5 registros/lado", value: fmtInt(cruz.resumo.nSubstanciasComparaveis) },
+      { label: "Maior diferença nominal", value: maxAdd ? maxAdd.substancia : "—" },
+      { label: "Razão beneficiada/bruta (substância em destaque)", value: maxAdd ? fmtX(maxAdd.fatorAgregacao) : "—" },
     ];
     clear(kpiHost);
     tiles.forEach(function (t) {
@@ -592,4 +650,5 @@
   });
 
   initCruzamento();
+  initNavigation();
 })();

@@ -12,3 +12,7 @@ transform/target/
 transform/dbt_packages/
 transform/logs/
 transform/.user.yml
+
+# Legacy generated artifacts from the pre-dbt local pipeline
+data/silver/
+data/gold/
