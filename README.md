@@ -1,32 +1,43 @@
 # Estrato Panorama Mineral Brasileiro
 
-Pipeline de analytics engineering que transforma **10.295 registros públicos**
-da mineração brasileira em modelos analíticos testados e um dashboard interativo.
+Um pipeline de analytics engineering que transforma 10.295 registros públicos
+da mineração brasileira em modelos analíticos testados e um dashboard
+interativo. Ele percorre a jornada completa: CSVs com decimal brasileiro,
+modelagem em dbt e uma análise que funciona offline no navegador.
 
-**18 modelos dbt · 57 testes de dados · 10 testes Python · dashboard offline**
+**18 modelos dbt · 57 testes de dados · 11 testes Python · dashboard offline**
 
 [Abrir dashboard](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/) ·
 [Explorar linhagem dbt](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/dbt/) ·
 [Abrir HTML offline](output/dashboard.html) ·
-[Decisões de design](docs/design.md)
+[Decisões de produto e design](docs/design.md)
 
 ![Dashboard Estrato](docs/screenshots/bruta_light.png)
 
-## O que este projeto demonstra
+## Em resumo
 
-| Competência | Evidência no projeto |
+| Entrega | Evidência |
 |---|---|
-| Ingestão de dados públicos | Polars lê CSVs `cp1252` e grava Parquet tipado em Bronze |
-| Analytics engineering | dbt organiza staging, fatos, agregações e cruzamentos em DuckDB |
-| Qualidade e contratos | 57 testes dbt, 10 testes Python e validação de interface em Chromium |
-| Análise responsável | Unidades, cobertura e limites de comparabilidade explicitados no produto |
-| Entrega de produto | Dashboard responsivo, acessível, sem CDN e publicável como arquivo único |
+| Dados públicos preparados para análise | 10.295 registros do RAL em Parquet tipado |
+| Modelagem analítica | 18 modelos dbt em DuckDB |
+| Qualidade e contratos | 57 testes dbt, 11 testes Python e validação de interface em Chromium |
+| Produto de dados | Dashboard responsivo, acessível, sem servidor e sem CDN |
+| Análise responsável | Unidades, cobertura e limites de comparação expostos no produto |
 
-Estrato conecta camadas geológicas às camadas de transformação dos dados. A
-variedade da stack é intencional: o projeto foi estruturado para demonstrar
+Estrato conecta camadas geológicas às camadas de transformação dos dados:
 ingestão, modelagem, testes, documentação e entrega em um fluxo reproduzível.
 
-## Dados e fontes
+## O que é possível analisar
+
+O dashboard apresenta produção, vendas, destinos e séries históricas das duas
+bases do RAL. Há filtros por ano, região, classe e substância, busca sem
+acentos e tema claro ou escuro. Extração e Processamento têm filtros próprios;
+o Comparativo trabalha com todo o período e torna esse escopo explícito.
+
+Filtros e detalhes dos gráficos funcionam por teclado. Em telas pequenas, os
+gráficos mantêm a legibilidade com rolagem horizontal localizada.
+
+## Dados, fontes e limites
 
 Os dados são públicos, publicados pela [Agência Nacional de Mineração
 (ANM)](https://www.gov.br/anm/pt-br/acesso-a-informacao/dados-abertos/bases-de-dados)
@@ -40,22 +51,22 @@ da usina, já processado). A página da [Produção Mineral da
 ANM](https://www.gov.br/anm/pt-br/assuntos/economia-mineral/producao-mineral)
 oferece contexto adicional e painéis oficiais.
 
-## As bases
+### As bases
 
-> **Produção Bruta** — "Dados de produção bruta e respectivas destinações
+> **Produção Bruta:** "Dados de produção bruta e respectivas destinações
 > (vendas, transferências, consumo e transformação) obtidos a partir do
 > Relatório Anual de Lavra (RAL) [...] pode haver inconsistências nas
 > informações disponibilizadas, por sua fonte ser dados declaratórios."
 
-> **Produção Beneficiada** — mesma fonte, para o produto já processado.
+> **Produção Beneficiada:** mesma fonte, para o produto já processado.
 
 6.313 registros de produção bruta + 3.982 de produção beneficiada, 56 e 52
 substâncias. As duas compartilham UF/Classe/Substância como dimensões, mas
 não compartilham unidade: Bruta é sempre em toneladas; Beneficiada varia
-por linha (t, kg, ct — diamante em quilates, bauxita em toneladas). Ver
+por linha (t, kg e ct; diamante em quilates e bauxita em toneladas). Ver
 [`transform/models/staging/`](transform/models/staging/).
 
-## Decisões de engenharia
+## Arquitetura e decisões de engenharia
 
 | Decisão | Motivo |
 |---|---|
@@ -65,7 +76,7 @@ por linha (t, kg, ct — diamante em quilates, bauxita em toneladas). Ver
 | Dashboard em HTML, CSS, JS e SVG | Entrega portátil, sem servidor ou CDN; filtros e gráficos funcionam no navegador. |
 | Playwright no CI | Valida navegação, filtros, teclado, tema e responsividade no artefato final. |
 
-## O que o comparativo permite concluir
+### Leitura do comparativo
 
 O [cruzamento SQL](transform/models/marts/cruzamento/) agrega os valores de
 venda declarados por substância nas duas bases. Os totais acumulados são
@@ -79,7 +90,7 @@ são diferentes. O critério de cinco registros por lado reduz comparações com
 pouca cobertura, mas não estabelece equivalência. Valores são nominais, sem
 ajuste pela inflação. Diferenças negativas não demonstram perda econômica.
 
-## Arquitetura
+### Fluxo de dados
 
 ```
 data/raw/{Producao_Bruta,Producao_Beneficiada}.csv (cp1252, decimal BR)
@@ -89,11 +100,11 @@ data/raw/{Producao_Bruta,Producao_Beneficiada}.csv (cp1252, decimal BR)
 │  BRONZE (EL)    │  com lineage. dbt não decodifica cp1252, por isso Python.
 └───────┬─────────┘
         ▼
-┌────────────────┐  dbt lendo o Parquet como fonte externa — parsing de
-│  STAGING        │  decimal BR via macro, sentinela → nulo
+┌────────────────┐  dbt lê o Parquet como fonte externa; parsing de
+│  STAGING        │  decimal BR via macro; sentinela para nulo
 └───────┬─────────┘
         ▼
-┌────────────────┐  seed uf_regiao + colunas derivadas — fct_producao_bruta
+┌────────────────┐  seed uf_regiao + colunas derivadas; fct_producao_bruta
 │  MARTS: core    │  / beneficiada, uma linha por declaração
 └───────┬─────────┘
         ▼
@@ -110,35 +121,37 @@ data/raw/{Producao_Bruta,Producao_Beneficiada}.csv (cp1252, decimal BR)
 └────────────────┘
 ```
 
-`python -m etl.pipeline` executa Bronze → `dbt build` → dashboard. A camada
-STAGING → MARTS tem 18 modelos, 56 testes de schema e 1 teste singular.
+`python -m etl.pipeline` executa Bronze, `dbt build` e a geração do dashboard.
+A camada STAGING para MARTS tem 18 modelos, 56 testes de schema e um teste singular.
 
-## Analytics Engineering com dbt
+## Referência técnica
+
+### Modelagem e testes dbt
 
 A camada de transformação é um projeto dbt em [`transform/`](transform/):
 
-- **Sources externas** — `models/staging/_sources.yml` aponta direto para
+- **Sources externas:** `models/staging/_sources.yml` aponta direto para
   o Parquet do Bronze via `external_location`, sem copiar nada pro
   warehouse antes.
-- **Macro compartilhado** —
+- **Macro compartilhada:**
   [`macros/parse_br_decimal.sql`](transform/macros/parse_br_decimal.sql)
   centraliza o parsing de decimal brasileiro usado pelos dois modelos de
   staging.
-- **Seed como fonte de verdade** —
+- **Seed como fonte de verdade:**
   [`seeds/uf_regiao.csv`](transform/seeds/uf_regiao.csv), testado como
   qualquer outro modelo.
-- **staging → marts** — `stg_*` tipa 1:1 com a fonte; `marts/core` monta
+- **staging para marts:** `stg_*` tipa 1:1 com a fonte; `marts/core` monta
   os fatos; `marts/bruta`, `marts/beneficiada` e `marts/cruzamento`
   agregam, cada camada via `ref()`.
-- **56 testes de schema + 1 singular** — `not_null`, `unique`,
+- **56 testes de schema e um singular:** `not_null`, `unique`,
   `accepted_values`, um `relationships` validando UF contra o seed, e
   [`tests/assert_valor_agregado_matches_diferenca.sql`](transform/tests/assert_valor_agregado_matches_diferenca.sql).
-- **Docs e linhagem gerados** — `dbt docs generate --static` produz
+- **Docs e linhagem gerados:** `dbt docs generate --static` produz
   [`docs/dbt/index.html`](docs/dbt/index.html):
 
 ![Grafo de linhagem dbt](docs/screenshots/dbt_lineage.png)
 
-## Stack
+### Stack
 
 | Camada | Ferramenta |
 |---|---|
@@ -147,18 +160,18 @@ A camada de transformação é um projeto dbt em [`transform/`](transform/):
 | Execução SQL | DuckDB, embutido |
 | Dashboard | HTML/CSS/JS vanilla, SVG, zero CDN |
 | Testes Python | pytest (Bronze + build do dashboard) |
-| CI | GitHub Actions — Bronze → `dbt build` → pytest → dashboard |
+| CI | GitHub Actions: Bronze, `dbt build`, pytest e dashboard |
 | Screenshots | Playwright (`scripts/capture_screenshots.py`) |
 | Formato colunar | Parquet (PyArrow) |
 
-## Qualidade de dados
+### Perfilamento da fonte
 
-A base de Produção Bruta veio com um perfilamento automático (`recon`).
-Duas sinalizações "críticas" eram falsos positivos: uma coluna de ano
-confundida com dado pessoal, e seis colunas numéricas sinalizadas como
-"mistura de tipos" que na verdade são decimal brasileiro consistente (mais
-uma, por "grafias divergentes", também não se sustenta — '145' e '14,5'
-são números diferentes). Extração completa em
+A base de Produção Bruta passou por perfilamento automático (`recon`) e revisão
+técnica. A coluna de ano foi classificada indevidamente como dado pessoal; seis
+campos numéricos em decimal brasileiro foram classificados como mistura de tipos;
+e `145` e `14,5` foram tratados como grafias do mesmo valor, embora sejam números
+distintos. O Bronze preserva o dado-fonte em texto, o staging converte decimais e
+transforma `-` em nulo na unidade de conteúdo. A triagem completa está em
 [`docs/relatorio_qualidade_producao_bruta.md`](docs/relatorio_qualidade_producao_bruta.md),
 gerada por [`etl/quality_report.py`](etl/quality_report.py).
 
@@ -200,7 +213,7 @@ etl/
   quality_report.py      recon JSON -> relatório Markdown
   pipeline.py             orquestrador
 transform/               projeto dbt
-  models/staging/         stg_* — tipagem, parsing decimal BR
+  models/staging/         stg_*: tipagem e parsing de decimal BR
   models/marts/core/       fct_producao_bruta / fct_producao_beneficiada
   models/marts/bruta/      (e beneficiada/) agregados
   models/marts/cruzamento/ cruzamento Bruta x Beneficiada
@@ -228,20 +241,6 @@ tests/
 ```
 
 </details>
-
-## Dashboard
-
-Três áreas navegáveis: **Extração**, **Processamento** e **Comparativo**.
-As duas primeiras têm filtros independentes por ano, região, classe e busca
-por substância, com ou sem acentos. A terceira compara todo o período e
-explicita esse escopo. O tema sistema/claro/escuro é persistido localmente.
-
-Filtros são botões acessíveis por teclado e os resultados têm anúncio de estado.
-Detalhes dos gráficos aparecem no foco e no ponteiro. Em telas pequenas, gráficos
-preservam a legibilidade em regiões com rolagem horizontal.
-
-O build padrão sincroniza `output/dashboard.html` e `docs/index.html`, usado pelo
-GitHub Pages. A metodologia explica unidades, cobertura e limites de interpretação.
 
 <details>
 <summary>Galeria de telas</summary>

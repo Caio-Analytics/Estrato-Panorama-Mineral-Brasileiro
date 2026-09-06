@@ -10,8 +10,8 @@ import json
 import polars as pl
 import pytest
 
-from etl import bronze
-from etl.config import BENEFICIADA, BRUTA, DUCKDB_PATH, DatasetSpec
+from etl import bronze, quality_report
+from etl.config import BENEFICIADA, BRUTA, DUCKDB_PATH, DatasetSpec, RECON_DIR
 
 SPECS = [BRUTA, BENEFICIADA]
 SPEC_IDS = [s.key for s in SPECS]
@@ -99,3 +99,16 @@ class TestDashboardBuild:
         data = json.loads(html[start:end])
         assert data["bruta"]["anoMin"] == 2010
         assert data["beneficiada"]["anoMin"] == 2010
+
+
+class TestQualityReport:
+    def test_reviewed_report_marks_known_profiler_false_positives(self):
+        recon = json.loads((RECON_DIR / "recon_Producao_Bruta.json").read_text())
+
+        report = quality_report.build_report(recon)
+
+        assert "Perfilamento e triagem técnica" in report
+        assert "`ano` → `aluno`" in report
+        assert "Falso positivo" in report
+        assert "não há dado pessoal nessa coluna" in report
+        assert "parse_br_decimal" in report
