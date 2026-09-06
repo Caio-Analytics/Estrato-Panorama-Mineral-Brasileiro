@@ -1,37 +1,44 @@
 # Estrato Panorama Mineral Brasileiro
 
-**Uma nova camada de leitura dos dados.** Um case de engenharia e análise
-exploratória da mineração brasileira: do CSV público ao dashboard.
-Estrato conecta as camadas geológicas às camadas de transformação dos dados.
-O projeto se chamava Bateia e agora se chama Estrato Panorama Mineral Brasileiro.
+Pipeline de analytics engineering que transforma **10.295 registros públicos**
+da mineração brasileira em modelos analíticos testados e um dashboard interativo.
 
-**[Abrir dashboard online](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/)** ·
-[Versão offline](output/dashboard.html) ·
-[Documentação e linhagem dbt](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/dbt/) ·
+**18 modelos dbt · 57 testes de dados · 10 testes Python · dashboard offline**
+
+[Abrir dashboard](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/) ·
+[Explorar linhagem dbt](https://caio-analytics.github.io/Estrato-Panorama-Mineral-Brasileiro/dbt/) ·
+[Abrir HTML offline](output/dashboard.html) ·
 [Decisões de design](docs/design.md)
 
 ![Dashboard Estrato](docs/screenshots/bruta_light.png)
 
-### O que este case demonstra
+## O que este projeto demonstra
 
-- **Engenharia:** ingestão de CSVs brasileiros em Polars e contratos por dataset.
-- **Analytics engineering:** transformação em dbt, modelos SQL, testes e linhagem.
-- **Análise:** cuidado com unidades, cobertura e comparabilidade das fontes.
-- **Produto:** navegação responsiva, filtros, temas e acesso por teclado.
-- **Entrega:** CI, testes no navegador e HTML autocontido para uso offline.
+| Competência | Evidência no projeto |
+|---|---|
+| Ingestão de dados públicos | Polars lê CSVs `cp1252` e grava Parquet tipado em Bronze |
+| Analytics engineering | dbt organiza staging, fatos, agregações e cruzamentos em DuckDB |
+| Qualidade e contratos | 57 testes dbt, 10 testes Python e validação de interface em Chromium |
+| Análise responsável | Unidades, cobertura e limites de comparabilidade explicitados no produto |
+| Entrega de produto | Dashboard responsivo, acessível, sem CDN e publicável como arquivo único |
 
-A variedade de tecnologias é intencional para demonstrar habilidades; não é
-uma recomendação de complexidade para um conjunto de dados deste tamanho.
+Estrato conecta camadas geológicas às camadas de transformação dos dados. A
+variedade da stack é intencional: o projeto foi estruturado para demonstrar
+ingestão, modelagem, testes, documentação e entrega em um fluxo reproduzível.
 
-## Sobre o projeto
+## Dados e fontes
 
-Dados 100% reais e públicos, publicados pela ANM (Agência Nacional de
-Mineração) a partir do Relatório Anual de Lavra (RAL). Duas bases, ~10.300
-registros, 2010–2025: **Produção Bruta** (o que sai da lavra) e **Produção
-Beneficiada** (o que sai da usina, já processado).
+Os dados são públicos, publicados pela [Agência Nacional de Mineração
+(ANM)](https://www.gov.br/anm/pt-br/acesso-a-informacao/dados-abertos/bases-de-dados)
+a partir do Relatório Anual de Lavra (RAL). A ANM informa que a série começa no
+ano-base 2010, é atualizada à medida que declarações são inseridas, retificadas
+ou ajustadas, e pode conter inconsistências por ser declaratória.
 
-**Tecnologias:** Python · Polars · dbt (dbt-duckdb) · DuckDB · PyArrow ·
-pytest · GitHub Actions · Playwright · HTML/CSS/JS vanilla.
+Este recorte contém 10.295 registros, de 2010 a 2025, em duas bases:
+**Produção Bruta** (o que sai da lavra) e **Produção Beneficiada** (o que sai
+da usina, já processado). A página da [Produção Mineral da
+ANM](https://www.gov.br/anm/pt-br/assuntos/economia-mineral/producao-mineral)
+oferece contexto adicional e painéis oficiais.
 
 ## As bases
 
@@ -47,6 +54,16 @@ substâncias. As duas compartilham UF/Classe/Substância como dimensões, mas
 não compartilham unidade: Bruta é sempre em toneladas; Beneficiada varia
 por linha (t, kg, ct — diamante em quilates, bauxita em toneladas). Ver
 [`transform/models/staging/`](transform/models/staging/).
+
+## Decisões de engenharia
+
+| Decisão | Motivo |
+|---|---|
+| Polars até Bronze | Os CSVs usam `cp1252` e decimal brasileiro; a fronteira de ingestão preserva os valores como texto antes da tipagem. |
+| dbt + DuckDB na transformação | SQL versionado, dependências explícitas por `ref()`, testes, documentação e linhagem em um warehouse local. |
+| Parquet entre ingestão e transformação | Separa a leitura dos arquivos-fonte da modelagem analítica e reduz custo de leitura. |
+| Dashboard em HTML, CSS, JS e SVG | Entrega portátil, sem servidor ou CDN; filtros e gráficos funcionam no navegador. |
+| Playwright no CI | Valida navegação, filtros, teclado, tema e responsividade no artefato final. |
 
 ## O que o comparativo permite concluir
 
@@ -93,8 +110,8 @@ data/raw/{Producao_Bruta,Producao_Beneficiada}.csv (cp1252, decimal BR)
 └────────────────┘
 ```
 
-`python -m etl.pipeline` executa Bronze → `dbt build` → dashboard; o tempo depende do ambiente. STAGING → MARTS é `dbt build`: 18 modelos, 56 testes de schema
-+ 1 teste singular.
+`python -m etl.pipeline` executa Bronze → `dbt build` → dashboard. A camada
+STAGING → MARTS tem 18 modelos, 56 testes de schema e 1 teste singular.
 
 ## Analytics Engineering com dbt
 
@@ -145,34 +162,36 @@ são números diferentes). Extração completa em
 [`docs/relatorio_qualidade_producao_bruta.md`](docs/relatorio_qualidade_producao_bruta.md),
 gerada por [`etl/quality_report.py`](etl/quality_report.py).
 
-## Como rodar
+## Como executar
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m etl.pipeline   # Bronze -> dbt build -> output/dashboard.html
+python -m etl.pipeline
 ```
 
-Depois abra `output/dashboard.html` no navegador — não precisa de servidor.
+Abra `output/dashboard.html` no navegador. Não é necessário iniciar servidor.
+
+### Verificação completa
 
 ```bash
 python -m pytest tests/ -v
-# Comandos dbt abaixo executados na raiz do repositório
 export BATEIA_DUCKDB_PATH="$PWD/data/warehouse/bateia.duckdb"
 export BATEIA_DATA_DIR="$PWD/data"
 dbt build --project-dir transform --profiles-dir transform
-dbt docs generate --static --project-dir transform --profiles-dir transform
-cp transform/target/static_index.html docs/dbt/index.html
-python -m etl.quality_report
 pip install -r requirements-dev.txt
 python -m playwright install chromium
 python scripts/check_dashboard.py
-python scripts/capture_screenshots.py
 ```
 
-## Estrutura
+Para atualizar a documentação de linhagem: `dbt docs generate --static
+--project-dir transform --profiles-dir transform` e copie
+`transform/target/static_index.html` para `docs/dbt/index.html`.
+
+<details>
+<summary>Estrutura do repositório</summary>
 
 ```
 etl/
@@ -208,6 +227,8 @@ tests/
   tests.yml
 ```
 
+</details>
+
 ## Dashboard
 
 Três áreas navegáveis: **Extração**, **Processamento** e **Comparativo**.
@@ -222,10 +243,13 @@ preservam a legibilidade em regiões com rolagem horizontal.
 O build padrão sincroniza `output/dashboard.html` e `docs/index.html`, usado pelo
 GitHub Pages. A metodologia explica unidades, cobertura e limites de interpretação.
 
-## Screenshots
+<details>
+<summary>Galeria de telas</summary>
 
 | | |
 |---|---|
 | ![Produção Bruta](docs/screenshots/bruta_dark.png) | ![Produção Beneficiada](docs/screenshots/beneficiada_dark.png) |
 | ![Beneficiamento](docs/screenshots/beneficiamento_dark.png) | ![Tema claro](docs/screenshots/bruta_light.png) |
 | ![Linhagem dbt](docs/screenshots/dbt_lineage.png) | |
+
+</details>
